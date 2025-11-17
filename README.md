@@ -48,3 +48,30 @@ class AppCluster implements FeatureCluster {
 ```
 
 ## State Management
+
+To manage state you'll need a `StateManager<T>`:
+
+```dart
+class TestStateManager extends StateManager<int> {
+  TestStateManager() : super(0);
+
+  // Push New State based on the previous state.
+  void increment() => pushNewState((oldState) => oldState + 1);
+}
+```
+
+To react as state changes:
+
+```dart
+  Scaffold(
+    // React to state change 
+    body: StateBuilder<TestStateManager, int>(
+      builder: (context, count) => Center(child: Text('$count')),
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () =>
+        context.getStateManager<TestStateManager>().increment(), // force a state change.
+      child: const Icon(Icons.add),
+    ),
+  );
+```
