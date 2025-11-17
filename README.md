@@ -1,39 +1,34 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# Scale Framework
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+## Inversion Of Control
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
+Features must expose a `FeatureModule` or `FeatureCluster` to be used by the App. These are their IOC Containers:
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
-
+Example code for `FeatureModule` from `feature_1`:
 ```dart
-const like = 'sample';
+class GarageModule implements FeatureModule {
+  void setup(PublicRegistry registry) {
+    registry.addGlobalStateManager(GarageLoader());
+    registry.addGlobalStateManager(
+      VehicleSelectionStateManager(vehicleSelectedNotifier),
+    );
+  }
+}
 ```
 
-## Additional information
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+Example code for `ClusterModule` from `App`:
+```dart
+class AppCluster implements FeatureCluster {
+  @override
+  void setup(ModuleRegistry registry) {
+    registry.addModule(
+      (service) => GarageModule(
+        vehicleSelectedNotifier: service.get<DataProducer<Vehicle>>(),
+      ),
+    );
+  }
+}
+```
+
+## State Management
