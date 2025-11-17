@@ -1,5 +1,21 @@
 # Scale Framework
 
+To initialize the framework:
+
+```dart
+  // Make sure this only is instantiated once (not affected by hot reload)
+  final registry = FeatureModulesRegistry(
+    featureClusters: [/* Feature Clusters go here */],
+    featureModules: [/* Feature Modules go here */],
+  );
+  MaterialApp(
+    home: ModuleSetup(
+      registry: registry,
+      child: /* home here */,
+    ),
+  )
+```
+
 ## Inversion Of Control
 
 Features must expose a `FeatureModule` or `FeatureCluster` to be used by the App. These are their IOC Containers:
