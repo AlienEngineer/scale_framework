@@ -75,3 +75,7 @@ To react as state changes:
     ),
   );
 ```
+
+## Sharing data between features
+
+A feature that needs data is required to explicitly define that dependency. The feature module must receive a `DataConsumer<T>` that will need to be passed by the app. On the other hand, features that can provide data need to allow for a `DataProvider<T>` to be given. This means when a feature produce a value it has the opportunity to push that data via the `DataProvider<T>` and eventually be consumed by the app and pushed to data consumers.
