@@ -27,77 +27,35 @@ class BffDataDto {
   });
 }
 
-abstract class ModelsFactory<T, TDto> {
-  T makeDefault();
-  TDto makeOnErrorDto();
-  T map(TDto dto);
-}
-
-abstract class LoaderStateManager<T, TDto> extends StateManager<T> {
-  final HttpRequest<BffDataDto> request;
-  LoaderStateManager(this.request, super.initialState);
-}
-
-class TestStateManager extends StateManager<BffData> {
-  final HttpRequest<BffDataDto> request;
+class TestModelsFactory implements LoaderModelsFactory<BffData, BffDataDto> {
   final int id;
-  TestStateManager(this.request, {this.id = 1}) : super(BffData());
+  TestModelsFactory({this.id = 1});
 
   @override
-  void initialize() => refreshData(id);
+  Map<String, Object>? getInitialArguments() => {'id': id};
 
-  void refreshData(int id) => request
-      .execute({'id': id})
-      .onError((error, stackTrace) => Future.value(BffDataDto(failed: true)))
-      .then((value) => pushNewState((oldState) => map(value)));
+  @override
+  BffDataDto makeOnErrorDto(Object? error) => BffDataDto(failed: true);
 
-  BffData map(BffDataDto dto) => BffData(
-        loaded: true,
-        data: dto.someField,
-        failed: dto.failed,
-      );
+  @override
+  BffData map(BffDataDto dto) =>
+      BffData(loaded: true, data: dto.someField, failed: dto.failed);
+
+  @override
+  BffData makeInitialState() => BffData();
 }
 
-class TestWidget extends StatelessWidget {
+class TestWidget extends LoaderWidget<BffData> {
   const TestWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: StateBuilder<TestStateManager, BffData>(
-        builder: (context, data) {
-          if (data.failed) {
-            return FailureWidget();
-          }
-          if (data.loaded) {
-            return LoadedWidget();
-          }
-          return LoadingWidget();
-        },
-      ),
-    );
-  }
-}
-
-class LoadingWidget extends StatelessWidget {
-  const LoadingWidget({super.key});
+  Widget loaded(BuildContext context, BffData data) => LoadedWidget();
 
   @override
-  Widget build(BuildContext context) => const Placeholder();
-}
-
-class LoadedWidget extends StatelessWidget {
-  const LoadedWidget({super.key});
+  Widget loading(BuildContext context) => LoadingWidget();
 
   @override
-  Widget build(BuildContext context) => const Placeholder();
-}
-
-class FailureWidget extends StatelessWidget {
-  const FailureWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) => const Placeholder();
+  Widget onError(BuildContext context, BffData data) => FailureWidget();
 }
 
 void main() {
@@ -145,23 +103,11 @@ class TestFeatureModule extends FeatureModule {
 
   @override
   void setup(PublicRegistry registry) {
-    registry.addSingletonLazy<MapperOf<BffDataDto>>(
-      (_) => MapperOfBffDataDto(),
-    );
-
-    registry.addSingletonLazy<HttpRequest<BffDataDto>>(
-      (service) => HttpGetRequest<BffDataDto>(
-        uri: 'some_resource/{id}',
-        mapper: service.get<MapperOf<BffDataDto>>(),
-        client: httpClient,
-      ),
-    );
-
-    registry.addGlobalStateManagerLazy(
-      (service) => TestStateManager(
-        service.get<HttpRequest<BffDataDto>>(),
-        id: id,
-      ),
+    registry.addLoader<BffData, BffDataDto>(
+      mapper: MapperOfBffDataDto(),
+      factory: TestModelsFactory(id: id),
+      uri: 'some_resource/{id}',
+      client: httpClient,
     );
   }
 }
@@ -178,3 +124,24 @@ MockClient makeFakeHttpClient() => MockClient((request) async {
       await Future.delayed(Duration(milliseconds: 2500));
       return http.Response("some result", 200);
     });
+
+class LoadingWidget extends StatelessWidget {
+  const LoadingWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Placeholder();
+}
+
+class LoadedWidget extends StatelessWidget {
+  const LoadedWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Placeholder();
+}
+
+class FailureWidget extends StatelessWidget {
+  const FailureWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Placeholder();
+}

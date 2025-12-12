@@ -24,7 +24,7 @@ class TestWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StateBuilder<TestStateManager, int>(
+      body: StateBuilder<int>(
         builder: (context, count) => Center(child: Text('$count')),
       ),
       floatingActionButton: FloatingActionButton(

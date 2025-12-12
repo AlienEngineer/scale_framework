@@ -1,5 +1,7 @@
 import 'package:provider/single_child_widget.dart';
+import 'package:scale_framework/resources/resources.dart';
 import 'package:scale_framework/scale_framework.dart';
+import 'package:http/http.dart' as http;
 
 class FeatureModulesRegistry implements Registry, ModuleRegistry {
   final Map<Type, LazyRecord<Object>> _lazySingletons = {};
@@ -111,6 +113,27 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       _resolvedServices.containsKey(T) || _lazySingletons.containsKey(T);
 
   bool alreadyResolved<T>() => _resolvedServices.containsKey(T);
+
+  @override
+  void addLoader<T, TDto>({
+    required MapperOf<TDto> mapper,
+    required LoaderModelsFactory<T, TDto> factory,
+    required String uri,
+    required http.Client client,
+  }) {
+    addSingletonLazy<MapperOf<TDto>>((_) => mapper);
+
+    addSingletonLazy<HttpRequest<TDto>>((service) => HttpGetRequest<TDto>(
+          uri: uri,
+          mapper: service.get<MapperOf<TDto>>(),
+          client: client,
+        ));
+
+    addGlobalStateManagerLazy((service) => LoaderStateManager(
+          service.get<HttpRequest<TDto>>(),
+          factory,
+        ));
+  }
 }
 
 class CompositeProducer<T> implements DataProducer<T> {
