@@ -14,6 +14,8 @@ abstract class StateManager<TState> {
 
   BlocProvider<CubitWrapper<TState>> getProvider() =>
       BlocProvider(create: (BuildContext context) => _bloc);
+
+  void initialize();
 }
 
 class CubitWrapper<TState> extends Cubit<TState> {

@@ -5,9 +5,11 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
   final Map<Type, LazyRecord<Object>> _lazySingletons = {};
   final Map<Type, Object> _resolvedServices = {};
   final List<SingleChildWidget> _providers = [];
-
+  final Map<Type, LazyRecord<Object>> _lazyProviders = {};
+  final List<void Function()> _initialization = [];
   final List<FeatureModule>? featureModules;
   final List<FeatureCluster>? featureClusters;
+
   FeatureModulesRegistry({
     this.featureModules,
     this.featureClusters,
@@ -32,10 +34,27 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
   @override
   List<SingleChildWidget> getProviders() => _providers;
 
+  void initialize() {
+    if (_lazyProviders.isNotEmpty) {
+      _lazyProviders.forEach(
+        (key, value) => _storeStateManager(key, value(this) as StateManager),
+      );
+      _lazyProviders.clear();
+    }
+    for (var element in _initialization) {
+      element();
+    }
+    _initialization.clear();
+  }
+
   @override
-  void addGlobalStateManager<T extends StateManager>(T obj) {
+  void addGlobalStateManager<T extends StateManager>(T obj) =>
+      _storeStateManager(T, obj);
+
+  void _storeStateManager(Type type, dynamic obj) {
     _providers.add(obj.getProvider());
-    _resolvedServices[T] = obj;
+    _resolvedServices[type] = obj;
+    _initialization.add(obj.initialize);
   }
 
   @override
@@ -50,9 +69,14 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
   }
 
   @override
-  void addSingletonLazy<T>(T Function(ServiceCollection service) callback) {
-    _lazySingletons[T] = (service) => callback(service) as Object;
-  }
+  void addGlobalStateManagerLazy<T extends StateManager>(
+    LazyRecord<T> callback,
+  ) =>
+      _lazyProviders[T] = (service) => callback(service) as Object;
+
+  @override
+  void addSingletonLazy<T>(T Function(ServiceCollection service) callback) =>
+      _lazySingletons[T] = (service) => callback(service) as Object;
 
   @override
   void addModule(LazyRecord<FeatureModule> moduleBuilder) =>

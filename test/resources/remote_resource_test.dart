@@ -12,6 +12,14 @@ void main() {
 
       expect(result, 'some result');
     });
+    test('providing arguments will make request with those arguments',
+        () async {
+      var request = makeRequest('some_resource/{id}');
+
+      var result = await request.execute({'id': 1});
+
+      expect(result, 'some result');
+    });
     test('throws exception when the resource was Not Found (404)', () async {
       var request = makeRequest('some_resource/-1');
 

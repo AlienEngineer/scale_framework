@@ -13,6 +13,9 @@ class TestStateManager extends StateManager<int> {
   TestStateManager() : super(0);
 
   void increment() => pushNewState((oldState) => oldState + 1);
+
+  @override
+  void initialize() {}
 }
 
 class TestWidget extends StatelessWidget {

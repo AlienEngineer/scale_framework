@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:scale_framework/scale_framework.dart';
 
-class ModuleSetup extends StatelessWidget {
+class ModuleSetup extends StatefulWidget {
   final FeatureModulesRegistry registry;
   final Widget child;
 
@@ -14,12 +14,23 @@ class ModuleSetup extends StatelessWidget {
   });
 
   @override
+  State<ModuleSetup> createState() => _ModuleSetupState();
+}
+
+class _ModuleSetupState extends State<ModuleSetup> {
+  @override
+  void initState() {
+    super.initState();
+    widget.registry.initialize();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Provider<StateManagerRegistry>(
-      create: (context) => StateManagerRegistry(registry),
+      create: (context) => StateManagerRegistry(widget.registry),
       child: MultiBlocProvider(
-        providers: registry.getProviders(),
-        child: child,
+        providers: widget.registry.getProviders(),
+        child: widget.child,
       ),
     );
   }
