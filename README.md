@@ -49,6 +49,45 @@ class AppCluster implements FeatureCluster {
 
 ## State Management
 
+### Loading Backend Data
+
+To ease the access to data without much duplication we need 3 parts, a Dto Mapper, a Business Model Factory and a URI:
+
+#### On the FeatureModule
+```dart
+registry.addLoader<T, TDto>(
+    mapper: MapperOfDto(),    // an implementation of MapperOf<TDto>
+    factory: ModelsFactory(), // an implementation of LoaderModelsFactory<T, TDto> 
+    uri: 'some_url',          // the target url, can include path parameters within {} 
+    client: httpClient,       // [Optional] Used for testing purposes for faking a backend.
+);
+```
+
+After this is done, we can go ahead and implement our Widget that will define what happens when a response comes in from the backend.
+In the example, `BackendData` holds the mapped data from the implementation in `LoaderModelsFactory<T, TDto>`.
+
+```dart
+class MyWidget extends LoaderWidget<BackendData> {
+  const MyWidget({super.key});
+
+  @override
+  Widget loaded(BuildContext context, BackendData data) =>
+      LoadedWidget();
+
+  @override
+  Widget loading(BuildContext context) =>
+      LoadingWidget();
+
+  @override
+  Widget onError(BuildContext context, BackendData data) =>
+      FailureWidget();
+}
+```
+
+For more generic usage there the example below.
+
+### Generic Use
+
 To manage state you'll need a `StateManager<T>`:
 
 ```dart
@@ -75,6 +114,8 @@ To react as state changes:
     ),
   );
 ```
+
+
 
 ## Sharing data between features
 
