@@ -6,25 +6,15 @@ import 'package:scale_framework/resources/resources.dart';
 import 'package:scale_framework/scale_framework.dart';
 
 class BffData {
-  final bool loaded;
   final String data;
-  final bool failed;
 
-  BffData({
-    this.loaded = false,
-    this.data = "",
-    this.failed = false,
-  });
+  BffData({this.data = ""});
 }
 
 class BffDataDto {
   final String someField;
-  final bool failed;
 
-  BffDataDto({
-    this.someField = "",
-    this.failed = false,
-  });
+  BffDataDto({this.someField = ""});
 }
 
 class TestModelsFactory implements LoaderModelsFactory<BffData, BffDataDto> {
@@ -35,21 +25,24 @@ class TestModelsFactory implements LoaderModelsFactory<BffData, BffDataDto> {
   Map<String, Object>? getInitialArguments() => {'id': id};
 
   @override
-  BffDataDto makeOnErrorDto(Object? error) => BffDataDto(failed: true);
+  BffDataDto makeOnErrorDto(Object? error) => BffDataDto();
 
   @override
-  BffData map(BffDataDto dto) =>
-      BffData(loaded: true, data: dto.someField, failed: dto.failed);
+  BffData map(BffDataDto dto) => BffData(data: dto.someField);
 
   @override
   BffData makeInitialState() => BffData();
 }
 
 class TestWidget extends LoaderWidget<BffData> {
-  const TestWidget({super.key});
+  const TestWidget({
+    super.showLoadedOnFailure,
+    super.showLoadedOnLoading,
+    super.key,
+  });
 
   @override
-  Widget loaded(BuildContext context, BffData data) => LoadedWidget();
+  Widget loaded(BuildContext context, BffData data) => LoadedWidget(data.data);
 
   @override
   Widget loading(BuildContext context) => LoadingWidget();
@@ -58,30 +51,142 @@ class TestWidget extends LoaderWidget<BffData> {
   Widget onError(BuildContext context, BffData data) => FailureWidget();
 }
 
+class HomeWidget extends StatelessWidget {
+  final int refreshId;
+  final bool showLoadedOnFailure;
+  final bool showLoadedOnLoading;
+  const HomeWidget({
+    super.key,
+    this.refreshId = 1,
+    required this.showLoadedOnFailure,
+    required this.showLoadedOnLoading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: TestWidget(
+        showLoadedOnFailure: showLoadedOnFailure,
+        showLoadedOnLoading: showLoadedOnLoading,
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.refresh({'id': refreshId}),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
 void main() {
-  testWidgets('On render display loading', (WidgetTester tester) async {
-    await pumpApp(tester);
+  group('first load', () {
+    testWidgets('On render display loading', (WidgetTester tester) async {
+      await pumpApp(tester);
 
-    expect(find.byType(LoadingWidget), findsOneWidget);
+      expect(find.byType(LoadingWidget), findsOneWidget);
 
-    await tester.pump(Duration(minutes: 1));
+      await tester.pump(Duration(minutes: 1));
+    });
+    testWidgets('after the resource has loaded display loaded widget',
+        (WidgetTester tester) async {
+      await pumpApp(tester);
+      await tester.pump(Duration(milliseconds: 5000));
+
+      expect(find.byType(LoadedWidget), findsOneWidget);
+      expect(find.text('some result'), findsOneWidget);
+    });
+    testWidgets('when loading a resource fails display failure widget',
+        (WidgetTester tester) async {
+      await pumpApp(tester, id: 500);
+
+      expect(find.byType(FailureWidget), findsOneWidget);
+    });
   });
-  testWidgets('after the resource is loaded display loaded widget',
-      (WidgetTester tester) async {
-    await pumpApp(tester);
-    await tester.pump(Duration(milliseconds: 5000));
+  group('refreshing', () {
+    testWidgets('[showLoadedOnLoading] display loading on first load',
+        (WidgetTester tester) async {
+      await pumpApp(tester, showLoadedOnLoading: true);
+      await tester.pump(Duration(milliseconds: 100));
 
-    expect(find.byType(LoadedWidget), findsOneWidget);
-  });
-  testWidgets('when loading a resource fails display failure widget',
-      (WidgetTester tester) async {
-    await pumpApp(tester, id: 500);
+      expect(find.byType(LoadingWidget), findsOneWidget);
+      await tester.pump(Duration(minutes: 1));
+    });
+    testWidgets(
+        '[showLoadedOnLoading] when refreshing a resource display loading',
+        (WidgetTester tester) async {
+      await pumpApp(tester, showLoadedOnLoading: true);
+      await tester.pump(Duration(milliseconds: 5000));
 
-    expect(find.byType(FailureWidget), findsOneWidget);
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pump(Duration(milliseconds: 1));
+
+      expect(find.byType(LoadedWidget), findsOneWidget);
+      await tester.pump(Duration(minutes: 1));
+    });
+    testWidgets(
+        '[!showLoadedOnLoading] when refreshing a resource display loading',
+        (WidgetTester tester) async {
+      await pumpApp(tester);
+      await tester.pump(Duration(milliseconds: 5000));
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pump(Duration(milliseconds: 1));
+
+      expect(find.byType(LoadingWidget), findsOneWidget);
+      await tester.pump(Duration(minutes: 1));
+    });
+    testWidgets('[showLoadedOnFailure] display failure on first load',
+        (WidgetTester tester) async {
+      await pumpApp(tester, showLoadedOnFailure: true, id: 500);
+      await tester.pump(Duration(milliseconds: 100));
+
+      expect(find.byType(FailureWidget), findsOneWidget);
+      await tester.pump(Duration(minutes: 1));
+    });
+    testWidgets(
+        '[showLoadedOnFailure] after refreshing a failed resource display loaded widget with previous success',
+        (WidgetTester tester) async {
+      await pumpApp(tester, refreshId: 500, showLoadedOnFailure: true);
+      await tester.pump(Duration(milliseconds: 5000));
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pump(Duration(milliseconds: 1));
+
+      expect(find.byType(LoadedWidget), findsOneWidget);
+      expect(find.text('some result'), findsOneWidget);
+    });
+    testWidgets(
+        '[!showLoadedOnFailure] after refreshing a failed resource display failure widget',
+        (WidgetTester tester) async {
+      await pumpApp(tester, refreshId: 500, showLoadedOnFailure: false);
+      await tester.pump(Duration(milliseconds: 5000));
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pump(Duration(milliseconds: 1));
+
+      expect(find.byType(FailureWidget), findsOneWidget);
+    });
+
+    testWidgets('after refreshing a resource display loaded widget',
+        (WidgetTester tester) async {
+      await pumpApp(tester);
+      await tester.pump(Duration(milliseconds: 5000));
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pump(Duration(milliseconds: 5000));
+
+      expect(find.byType(LoadedWidget), findsOneWidget);
+      expect(find.text('some refreshed result'), findsOneWidget);
+    });
   });
 }
 
-Future<void> pumpApp(WidgetTester tester, {int id = 1}) async {
+Future<void> pumpApp(
+  WidgetTester tester, {
+  int id = 1,
+  int refreshId = 1,
+  bool showLoadedOnFailure = false,
+  bool showLoadedOnLoading = false,
+}) async {
   await tester.pumpWidget(MaterialApp(
     home: ModuleSetup(
       registry: FeatureModulesRegistry(
@@ -89,7 +194,11 @@ Future<void> pumpApp(WidgetTester tester, {int id = 1}) async {
           TestFeatureModule(makeFakeHttpClient(), id),
         ],
       ),
-      child: TestWidget(),
+      child: HomeWidget(
+        refreshId: refreshId,
+        showLoadedOnFailure: showLoadedOnFailure,
+        showLoadedOnLoading: showLoadedOnLoading,
+      ),
     ),
   ));
   await tester.pump(Duration(milliseconds: 1));
@@ -117,13 +226,20 @@ class MapperOfBffDataDto implements MapperOf<BffDataDto> {
   BffDataDto map(String data) => BffDataDto(someField: data);
 }
 
-MockClient makeFakeHttpClient() => MockClient((request) async {
-      if (request.url.toString() == 'some_resource/500') {
-        return http.Response("there was an error processing the request", 500);
-      }
-      await Future.delayed(Duration(milliseconds: 2500));
-      return http.Response("some result", 200);
-    });
+MockClient makeFakeHttpClient() {
+  var i = 0;
+  return MockClient((request) async {
+    if (request.url.toString() == 'some_resource/500') {
+      return http.Response("there was an error processing the request", 500);
+    }
+    await Future.delayed(Duration(milliseconds: 2500));
+    if (i > 0) {
+      return http.Response("some refreshed result", 200);
+    }
+    ++i;
+    return http.Response("some result", 200);
+  });
+}
 
 class LoadingWidget extends StatelessWidget {
   const LoadingWidget({super.key});
@@ -133,10 +249,11 @@ class LoadingWidget extends StatelessWidget {
 }
 
 class LoadedWidget extends StatelessWidget {
-  const LoadedWidget({super.key});
+  final String data;
+  const LoadedWidget(this.data, {super.key});
 
   @override
-  Widget build(BuildContext context) => const Placeholder();
+  Widget build(BuildContext context) => Text(data);
 }
 
 class FailureWidget extends StatelessWidget {

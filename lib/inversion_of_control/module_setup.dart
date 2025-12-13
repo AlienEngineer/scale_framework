@@ -41,4 +41,5 @@ class StateManagerRegistry {
   const StateManagerRegistry(this.registry);
 
   T getManager<T>() => registry.get<T>();
+  LoaderStateManager getLoaderFor<T>() => registry.getLoaderFor<T>();
 }

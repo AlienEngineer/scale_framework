@@ -26,6 +26,7 @@ abstract class PublicRegistry {
 
 abstract class ServiceCollection {
   T get<T>();
+  LoaderStateManager getLoaderFor<T>();
 }
 
 abstract class Registry implements PublicRegistry, ServiceCollection {

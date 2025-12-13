@@ -3,11 +3,30 @@ import 'package:scale_framework/resources/resources.dart';
 import 'package:scale_framework/scale_framework.dart';
 
 class LoaderData<T> {
+  final bool loading;
   final bool loaded;
   final T data;
   final bool failed;
 
-  LoaderData({required this.loaded, required this.data, required this.failed});
+  LoaderData({
+    this.loading = false,
+    this.loaded = false,
+    this.failed = false,
+    required this.data,
+  });
+
+  LoaderData<T> copyWith({
+    bool? loaded,
+    T? data,
+    bool? failed,
+    bool? loading,
+  }) =>
+      LoaderData<T>(
+        loading: loading ?? this.loading,
+        loaded: loaded ?? this.loaded,
+        data: data ?? this.data,
+        failed: failed ?? this.failed,
+      );
 }
 
 abstract class LoaderModelsFactory<T, TDto> {
@@ -17,21 +36,24 @@ abstract class LoaderModelsFactory<T, TDto> {
   T map(TDto dto);
 }
 
+extension LoaderExtensions on BuildContext {
+  void refresh<T>([Map<String, Object>? arguments]) =>
+      getLoaderFor<T>().refresh(arguments);
+}
+
 class LoaderStateManager<T, TDto> extends StateManager<LoaderData<T>> {
   final LoaderModelsFactory<T, TDto> modelsFactory;
   final HttpRequest<TDto> request;
 
   LoaderStateManager(this.request, this.modelsFactory)
-      : super(LoaderData(
-          loaded: false,
-          data: modelsFactory.makeInitialState(),
-          failed: false,
-        ));
+      : super(LoaderData(data: modelsFactory.makeInitialState()));
 
   @override
   void initialize() => refresh(modelsFactory.getInitialArguments());
 
   void refresh([Map<String, Object>? arguments]) {
+    pushInitialState();
+
     var execute = request.execute(arguments);
     execute.then((value) {
       pushData(value);
@@ -40,34 +62,47 @@ class LoaderStateManager<T, TDto> extends StateManager<LoaderData<T>> {
     });
   }
 
-  void pushData(value) => pushNewState(
-        (oldState) => LoaderData(
-            data: modelsFactory.map(value), loaded: true, failed: false),
-      );
+  void pushData(value) => pushNewState((oldState) => oldState.copyWith(
+        data: modelsFactory.map(value),
+        loaded: true,
+        failed: false,
+        loading: false,
+      ));
 
   void pushError(Object? error) => pushNewState(
-        (oldState) => LoaderData(
-            data: modelsFactory.map(modelsFactory.makeOnErrorDto(error)),
-            loaded: false,
-            failed: true),
-      );
+      (oldState) => oldState.copyWith(failed: true, loading: false));
+
+  void pushInitialState() =>
+      pushNewState((oldState) => oldState.copyWith(loading: true));
 }
 
 abstract class LoaderWidget<T> extends StatelessWidget {
-  const LoaderWidget({super.key});
+  final bool showLoadedOnFailure;
+  final bool showLoadedOnLoading;
+  const LoaderWidget({
+    super.key,
+    this.showLoadedOnFailure = false,
+    this.showLoadedOnLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) => StateBuilder<LoaderData<T>>(
         builder: (context, data) {
-          if (data.failed) {
+          if (shouldDisplayLoading(data)) {
+            return loading(context);
+          }
+          if (shouldDisplayError(data)) {
             return onError(context, data.data);
           }
-          if (data.loaded) {
-            return loaded(context, data.data);
-          }
-          return loading(context);
+          return loaded(context, data.data);
         },
       );
+
+  bool shouldDisplayError(LoaderData<dynamic> data) =>
+      data.failed && (!data.loaded || !showLoadedOnFailure);
+
+  bool shouldDisplayLoading(LoaderData<dynamic> data) =>
+      data.loading && (!data.loaded || !showLoadedOnLoading);
 
   Widget loading(BuildContext context);
   Widget loaded(BuildContext context, T data);

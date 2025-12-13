@@ -11,6 +11,7 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
   final List<void Function()> _initialization = [];
   final List<FeatureModule>? featureModules;
   final List<FeatureCluster>? featureClusters;
+  final List<LoaderStateManager> _loaderStateManagers = [];
 
   FeatureModulesRegistry({
     this.featureModules,
@@ -129,10 +130,20 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
           client: client,
         ));
 
-    addGlobalStateManagerLazy((service) => LoaderStateManager(
-          service.get<HttpRequest<TDto>>(),
-          factory,
-        ));
+    addGlobalStateManagerLazy((service) {
+      var loaderStateManager = LoaderStateManager<T, TDto>(
+        service.get<HttpRequest<TDto>>(),
+        factory,
+      );
+      _loaderStateManagers.add(loaderStateManager);
+      return loaderStateManager;
+    });
+  }
+
+  @override
+  LoaderStateManager getLoaderFor<T>() {
+    // TODO: support multiple Loaders.
+    return _loaderStateManagers.first;
   }
 }
 
