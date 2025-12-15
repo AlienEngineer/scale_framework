@@ -49,6 +49,13 @@ class AppCluster implements FeatureCluster {
 
 ## State Management
 
+### Debug Mode
+
+To show state changes in the console use:
+```dart
+ScaleFramework.EnableDebugMode();
+```
+
 ### Loading Backend Data
 
 To ease the access to data without much duplication we need 3 parts, a Dto Mapper, a Business Model Factory and a URI:

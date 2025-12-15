@@ -142,8 +142,20 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
 
   @override
   LoaderStateManager getLoaderFor<T>() {
+    if (_loaderStateManagers[T] == null) {
+      throw UnableToFindStateManager<T>();
+    }
     return _loaderStateManagers[T] as LoaderStateManager;
   }
+}
+
+class UnableToFindStateManager<T> extends Error {
+  UnableToFindStateManager();
+
+  @override
+  String toString() => "Unable to find manager for: $T\n"
+      " - make sure registry.addLoader<T, TDto>(...) was used.\n"
+      " - T and context.refresh<T>() must match.";
 }
 
 class CompositeProducer<T> implements DataProducer<T> {

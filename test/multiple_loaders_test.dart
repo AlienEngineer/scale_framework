@@ -166,7 +166,6 @@ class StudentModelsFactory implements LoaderModelsFactory<Student, StudentDto> {
 MockClient makeFakeHttpClient() {
   var i = 0;
   return MockClient((request) async {
-    print(request.url.toString());
     if (request.url.toString() == 'some_resource/500') {
       return http.Response("there was an error processing the request", 500);
     }

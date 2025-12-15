@@ -25,7 +25,7 @@ class HomeWidget extends StatelessWidget {
         showLoadedOnLoading: showLoadedOnLoading,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.refresh({'id': refreshId}),
+        onPressed: () => context.refresh<BffData>({'id': refreshId}),
         child: const Icon(Icons.add),
       ),
     );
