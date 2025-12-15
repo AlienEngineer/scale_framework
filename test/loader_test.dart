@@ -2,54 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:scale_framework/resources/resources.dart';
 import 'package:scale_framework/scale_framework.dart';
 
-class BffData {
-  final String data;
-
-  BffData({this.data = ""});
-}
-
-class BffDataDto {
-  final String someField;
-
-  BffDataDto({this.someField = ""});
-}
-
-class TestModelsFactory implements LoaderModelsFactory<BffData, BffDataDto> {
-  final int id;
-  TestModelsFactory({this.id = 1});
-
-  @override
-  Map<String, Object>? getInitialArguments() => {'id': id};
-
-  @override
-  BffDataDto makeOnErrorDto(Object? error) => BffDataDto();
-
-  @override
-  BffData map(BffDataDto dto) => BffData(data: dto.someField);
-
-  @override
-  BffData makeInitialState() => BffData();
-}
-
-class TestWidget extends LoaderWidget<BffData> {
-  const TestWidget({
-    super.showLoadedOnFailure,
-    super.showLoadedOnLoading,
-    super.key,
-  });
-
-  @override
-  Widget loaded(BuildContext context, BffData data) => LoadedWidget(data.data);
-
-  @override
-  Widget loading(BuildContext context) => LoadingWidget();
-
-  @override
-  Widget onError(BuildContext context, BffData data) => FailureWidget();
-}
+import 'testing_elements/testing_elements.dart';
 
 class HomeWidget extends StatelessWidget {
   final int refreshId;
@@ -65,7 +20,7 @@ class HomeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: TestWidget(
+      body: BffDataTestWidget(
         showLoadedOnFailure: showLoadedOnFailure,
         showLoadedOnLoading: showLoadedOnLoading,
       ),
@@ -111,7 +66,7 @@ void main() {
       await tester.pump(Duration(minutes: 1));
     });
     testWidgets(
-        '[showLoadedOnLoading] when refreshing a resource display loading',
+        '[showLoadedOnLoading] when refreshing a resource display loaded',
         (WidgetTester tester) async {
       await pumpApp(tester, showLoadedOnLoading: true);
       await tester.pump(Duration(milliseconds: 5000));
@@ -214,16 +169,11 @@ class TestFeatureModule extends FeatureModule {
   void setup(PublicRegistry registry) {
     registry.addLoader<BffData, BffDataDto>(
       mapper: MapperOfBffDataDto(),
-      factory: TestModelsFactory(id: id),
+      factory: BffDataModelsFactory(id: id),
       uri: 'some_resource/{id}',
       client: httpClient,
     );
   }
-}
-
-class MapperOfBffDataDto implements MapperOf<BffDataDto> {
-  @override
-  BffDataDto map(String data) => BffDataDto(someField: data);
 }
 
 MockClient makeFakeHttpClient() {
@@ -239,26 +189,4 @@ MockClient makeFakeHttpClient() {
     ++i;
     return http.Response("some result", 200);
   });
-}
-
-class LoadingWidget extends StatelessWidget {
-  const LoadingWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) => const Placeholder();
-}
-
-class LoadedWidget extends StatelessWidget {
-  final String data;
-  const LoadedWidget(this.data, {super.key});
-
-  @override
-  Widget build(BuildContext context) => Text(data);
-}
-
-class FailureWidget extends StatelessWidget {
-  const FailureWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) => const Placeholder();
 }

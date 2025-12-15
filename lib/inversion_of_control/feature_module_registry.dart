@@ -11,7 +11,7 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
   final List<void Function()> _initialization = [];
   final List<FeatureModule>? featureModules;
   final List<FeatureCluster>? featureClusters;
-  final List<LoaderStateManager> _loaderStateManagers = [];
+  final Map<Type, LoaderStateManager> _loaderStateManagers = {};
 
   FeatureModulesRegistry({
     this.featureModules,
@@ -135,15 +135,14 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
         service.get<HttpRequest<TDto>>(),
         factory,
       );
-      _loaderStateManagers.add(loaderStateManager);
+      _loaderStateManagers[T] = loaderStateManager;
       return loaderStateManager;
     });
   }
 
   @override
   LoaderStateManager getLoaderFor<T>() {
-    // TODO: support multiple Loaders.
-    return _loaderStateManagers.first;
+    return _loaderStateManagers[T] as LoaderStateManager;
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:scale_framework/internal/debug_mode.dart';
 import 'package:scale_framework/resources/resources.dart';
 import 'package:scale_framework/scale_framework.dart';
 
@@ -89,11 +90,14 @@ abstract class LoaderWidget<T> extends StatelessWidget {
   Widget build(BuildContext context) => StateBuilder<LoaderData<T>>(
         builder: (context, data) {
           if (shouldDisplayLoading(data)) {
+            scaleDebugPrint('loading : $T');
             return loading(context);
           }
           if (shouldDisplayError(data)) {
+            scaleDebugPrint('error : $T');
             return onError(context, data.data);
           }
+          scaleDebugPrint('loaded : $T');
           return loaded(context, data.data);
         },
       );
