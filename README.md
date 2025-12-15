@@ -75,7 +75,12 @@ In the example, `BackendData` holds the mapped data from the implementation in `
 
 ```dart
 class MyWidget extends LoaderWidget<BackendData> {
-  const MyWidget({super.key});
+  const MyWidget({super.key}): super(
+    // Keeps displaying the loaded state when refresh fails.
+    showLoadedOnFailure: false, // Optional, false by default
+    // Keeps displaying the loaded state while refreshing.
+    showLoadedOnLoading: false, // Optional, false by default
+  );
 
   @override
   Widget loaded(BuildContext context, BackendData data) =>
@@ -89,6 +94,11 @@ class MyWidget extends LoaderWidget<BackendData> {
   Widget onError(BuildContext context, BackendData data) =>
       FailureWidget();
 }
+```
+
+Whenever you want to refresh data from the backend just call:
+```dart
+context.refresh<BackendData>(); // Replace BackendData with your type.
 ```
 
 For more generic usage there the example below.
