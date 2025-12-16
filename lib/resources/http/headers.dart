@@ -33,7 +33,9 @@ class DefaultHttpHeadersFactory implements HttpHeadersFactory, HttpHeaders {
 
   @override
   void resolveRequirement(String requirement, String value) {
-    resolved[requirement] = value;
+    if (resolved.containsKey(requirement)) {
+      resolved[requirement] = value;
+    }
   }
 
   @override
