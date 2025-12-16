@@ -19,7 +19,8 @@ abstract class PublicRegistry {
     required MapperOf<TDto> mapper,
     required LoaderModelsFactory<T, TDto> factory,
     required String uri,
-    required http.Client client,
+    http.Client? client,
+    List<String>? requires,
   });
 }
 

@@ -7,20 +7,20 @@ abstract class HttpRequest<TResult> {
 
 class HttpGetRequest<TResult> implements HttpRequest<TResult> {
   String uri;
-  http.Client? client;
+  http.Client client;
   MapperOf<TResult> mapper;
   HttpHeadersFactory headersFactory;
 
   HttpGetRequest({
     required this.uri,
     required this.mapper,
-    this.client,
+    required this.client,
     this.headersFactory = const StubHeadersFactory(),
   });
 
   @override
   Future<TResult> execute([Map<String, Object>? arguments]) async {
-    var response = await (client ?? http.Client()).get(
+    var response = await client.get(
       Uri.parse(getUri(arguments)),
       headers: headersFactory.make(),
     );

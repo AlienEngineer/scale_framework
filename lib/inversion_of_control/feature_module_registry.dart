@@ -125,13 +125,17 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     required MapperOf<TDto> mapper,
     required LoaderModelsFactory<T, TDto> factory,
     required String uri,
-    required http.Client client,
-    List<String>? needs,
+    http.Client? client,
+    List<String>? requires,
   }) {
     addSingletonLazy<MapperOf<TDto>>((_) => mapper);
     addSingletonLazy<LoaderModelsFactory<T, TDto>>((_) => factory);
 
-    addHttpGetRequest<TDto>(uri: uri, client: client);
+    addHttpGetRequest<TDto>(
+      uri: uri,
+      client: client,
+      requires: requires,
+    );
 
     addGlobalStateManagerLazy((service) {
       var loaderStateManager = LoaderStateManager<T, TDto>(

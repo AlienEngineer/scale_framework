@@ -1,27 +1,20 @@
 import 'package:scale_framework/scale_framework.dart';
 import 'package:http/http.dart' as http;
 
-extension HttpRegistrationExtensions on Registry {
+extension HttpRegistrationExtensions on PublicRegistry {
   void addHttpGetRequest<TDto>({
     required String uri,
-    required http.Client client,
+    http.Client? client,
     List<String>? requires,
   }) =>
-      addSingletonLazy<HttpRequest<TDto>>((service) {
-        if (requires != null) {
-          return HttpGetRequest<TDto>(
-            uri: uri,
-            mapper: service.get<MapperOf<TDto>>(),
-            client: client,
-            headersFactory: makeFactory(service, requires),
-          );
-        }
-        return HttpGetRequest<TDto>(
+      addSingletonLazy<HttpRequest<TDto>>(
+        (service) => HttpGetRequest<TDto>(
           uri: uri,
           mapper: service.get<MapperOf<TDto>>(),
-          client: client,
-        );
-      });
+          client: client ?? service.get<http.Client>(),
+          headersFactory: makeFactory(service, requires),
+        ),
+      );
 
   HttpHeadersFactory makeFactory(
     ServiceCollection service,

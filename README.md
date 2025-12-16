@@ -67,6 +67,7 @@ registry.addLoader<T, TDto>(
     factory: ModelsFactory(), // an implementation of LoaderModelsFactory<T, TDto> 
     uri: 'some_url',          // the target url, can include path parameters within {} 
     client: httpClient,       // [Optional] Used for testing purposes for faking a backend.
+    requires: ['some field'], // [Optional] Tells the framework that this loaders requires specific information to be provided.
 );
 ```
 
