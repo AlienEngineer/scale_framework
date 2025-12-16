@@ -100,6 +100,11 @@ class MyWidget extends LoaderWidget<BackendData> {
 Whenever you want to refresh data from the backend just call:
 ```dart
 context.refresh<BackendData>(); // Replace BackendData with your type.
+
+// Provide data to be replaced in the path of the http request
+// in this example a path with {field} is going to be replaced by 1
+// e.g. 'mypath/{field}' would be converted into 'mypath/1'
+context.refresh<BackendData>({ 'field': 1 });
 ```
 
 For more generic usage there the example below.
@@ -110,7 +115,9 @@ To manage state you'll need a `StateManager<T>`:
 
 ```dart
 class TestStateManager extends StateManager<int> {
-  TestStateManager() : super(0);
+  TestStateManager() : super(
+    0,      // Initial state
+  );
 
   // Push New State based on the previous state.
   void increment() => pushNewState((oldState) => oldState + 1);
@@ -121,8 +128,8 @@ To react as state changes:
 
 ```dart
   Scaffold(
-    // React to state change 
-    body: StateBuilder<TestStateManager, int>(
+    // React to state change of a given type
+    body: StateBuilder<int>(
       builder: (context, count) => Center(child: Text('$count')),
     ),
     floatingActionButton: FloatingActionButton(
