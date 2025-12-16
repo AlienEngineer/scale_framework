@@ -1,5 +1,5 @@
 import 'package:provider/single_child_widget.dart';
-import 'package:scale_framework/resources/resources.dart';
+import 'package:scale_framework/resources/http/registry_extensions.dart';
 import 'package:scale_framework/scale_framework.dart';
 import 'package:http/http.dart' as http;
 
@@ -66,7 +66,12 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       return _resolvedServices[T] as T;
     }
 
-    _resolvedServices[T] = _lazySingletons[T]?.call(this) as Object;
+    var callback = _lazySingletons[T];
+    if (callback == null) {
+      throw UnableToResolveDependency<T>();
+    }
+
+    _resolvedServices[T] = callback(this);
 
     return get<T>();
   }
@@ -121,19 +126,17 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     required LoaderModelsFactory<T, TDto> factory,
     required String uri,
     required http.Client client,
+    List<String>? needs,
   }) {
     addSingletonLazy<MapperOf<TDto>>((_) => mapper);
+    addSingletonLazy<LoaderModelsFactory<T, TDto>>((_) => factory);
 
-    addSingletonLazy<HttpRequest<TDto>>((service) => HttpGetRequest<TDto>(
-          uri: uri,
-          mapper: service.get<MapperOf<TDto>>(),
-          client: client,
-        ));
+    addHttpGetRequest<TDto>(uri: uri, client: client);
 
     addGlobalStateManagerLazy((service) {
       var loaderStateManager = LoaderStateManager<T, TDto>(
         service.get<HttpRequest<TDto>>(),
-        factory,
+        service.get<LoaderModelsFactory<T, TDto>>(),
       );
       _loaderStateManagers[T] = loaderStateManager;
       return loaderStateManager;
@@ -147,6 +150,14 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     }
     return _loaderStateManagers[T] as LoaderStateManager;
   }
+}
+
+class UnableToResolveDependency<T> extends Error {
+  UnableToResolveDependency();
+
+  @override
+  String toString() => "Unable to find service for: $T\n"
+      " - make sure the dependency is registered.";
 }
 
 class UnableToFindStateManager<T> extends Error {
