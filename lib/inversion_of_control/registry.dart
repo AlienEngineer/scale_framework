@@ -1,5 +1,4 @@
 import 'package:provider/single_child_widget.dart';
-import 'package:scale_framework/resources/resources.dart';
 import 'package:scale_framework/scale_framework.dart';
 import 'package:http/http.dart' as http;
 

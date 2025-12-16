@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/testing.dart';
+import 'package:scale_framework/resources/http/http_module.dart';
 import 'package:scale_framework/resources/http/registry_extensions.dart';
 import 'package:scale_framework/scale_framework.dart';
 import 'package:http/http.dart' as http;
@@ -10,12 +11,10 @@ class IocContainer {
   HttpHeaders getHeaders() => registry.get<HttpHeaders>();
 
   HttpRequest<String> makeRequest(String uri, [List<String>? requires]) {
-    var factory = TestHttpHeadersFactory();
-    registry.addSingletonLazy<HttpHeadersFactory>((service) => factory);
-    registry.addSingletonLazy<HttpHeaders>((service) => factory);
-
-    registry
-        .addSingletonLazy<MapperOf<String>>((service) => StubStringMapper());
+    registry.addModule((_) => HttpModule());
+    registry.addSingletonLazy<MapperOf<String>>(
+      (service) => StubStringMapper(),
+    );
     registry.addHttpGetRequest<String>(
       uri: uri,
       client: makeFakeHttpClient(),
@@ -106,41 +105,6 @@ MockClient makeFakeHttpClient() => MockClient((request) async {
       }
       return http.Response('Not Found', 404);
     });
-
-class TestHttpHeadersFactory implements HttpHeadersFactory, HttpHeaders {
-  Map<String, String> resolved = {};
-
-  @override
-  Map<String, String> make() {
-    ensureAllRequirementsAreResolved();
-    return resolved;
-  }
-
-  @override
-  void resolveRequirement(String requirement, String value) {
-    resolved[requirement] = value;
-  }
-
-  @override
-  void pushNeeds(List<String> needs) {
-    for (var need in needs) {
-      resolved[need] = 'unresolved';
-    }
-  }
-
-  void ensureAllRequirementsAreResolved() {
-    List<String> unresolved = [];
-    resolved.forEach((key, value) {
-      if (value == 'unresolved') {
-        unresolved.add(key);
-      }
-    });
-
-    if (unresolved.isNotEmpty) {
-      throw MissingRequirementsError(unresolved);
-    }
-  }
-}
 
 class StubStringMapper implements MapperOf<String> {
   @override

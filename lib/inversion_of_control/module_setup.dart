@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:scale_framework/resources/http/http_module.dart';
 import 'package:scale_framework/scale_framework.dart';
 
 class ModuleSetup extends StatefulWidget {
@@ -21,6 +22,7 @@ class _ModuleSetupState extends State<ModuleSetup> {
   @override
   void initState() {
     super.initState();
+    widget.registry.addModule((_) => HttpModule());
     widget.registry.initialize();
   }
 

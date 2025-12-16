@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:scale_framework/internal/debug_mode.dart';
-import 'package:scale_framework/resources/resources.dart';
 import 'package:scale_framework/scale_framework.dart';
 
 class LoaderData<T> {

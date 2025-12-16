@@ -35,14 +35,3 @@ extension HttpRegistrationExtensions on Registry {
     return headersFactory;
   }
 }
-
-class MissingRequirementsError extends Error {
-  final List<String> unresolved;
-  MissingRequirementsError(this.unresolved);
-
-  @override
-  String toString() {
-    return "Some requirements are missing:\n"
-        "${unresolved.map((e) => '- $e').join('\n')}";
-  }
-}
