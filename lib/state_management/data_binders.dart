@@ -3,7 +3,7 @@ abstract class DataProducer<T> {
 }
 
 abstract class DataConsumer<T> {
-  void listen(void Function(T) onChange);
+  void listen(void Function(T data) onChange);
 }
 
 abstract class DataBinder<T1, T2>

@@ -18,6 +18,7 @@ class HttpGetRequest<TResult> implements HttpRequest<TResult> {
     this.headersFactory = const StubHeadersFactory(),
   });
 
+  // TODO: ensure that all placeholders are replaced or throw exception
   @override
   Future<TResult> execute([Map<String, Object>? arguments]) async {
     var response = await client.get(

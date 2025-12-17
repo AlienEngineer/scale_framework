@@ -21,6 +21,7 @@ abstract class PublicRegistry {
     required String uri,
     http.Client? client,
     List<String>? requires,
+    LoaderOptions? options,
   });
 }
 

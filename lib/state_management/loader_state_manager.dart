@@ -41,16 +41,47 @@ extension LoaderExtensions on BuildContext {
       getLoaderFor<T>().refresh(arguments);
 }
 
-class LoaderStateManager<T, TDto> extends StateManager<LoaderData<T>> {
-  final LoaderModelsFactory<T, TDto> modelsFactory;
-  final HttpRequest<TDto> request;
+class LoaderNotifier<T> extends DataConsumer<T> {
+  @override
+  void listen(void Function(T data) onChange) {}
+}
 
-  LoaderStateManager(this.request, this.modelsFactory)
-      : super(LoaderData(data: modelsFactory.makeInitialState()));
+abstract class Refresher {
+  void refresh([Map<String, Object>? arguments]);
+}
+
+abstract class DataProducerMapperOf<T> implements DataProducer<T> {
+  late Refresher _refresher;
+  void setRefresher(Refresher refresher) => _refresher = refresher;
 
   @override
-  void initialize() => refresh(modelsFactory.getInitialArguments());
+  void push(T data) => _refresher.refresh(map(data));
 
+  Map<String, Object>? map(T data);
+}
+
+class LoaderStateManager<T, TDto> extends StateManager<LoaderData<T>>
+    implements Refresher {
+  final LoaderModelsFactory<T, TDto> modelsFactory;
+  final HttpRequest<TDto> request;
+  final LoaderOptions options;
+
+  LoaderStateManager(
+    this.request,
+    this.modelsFactory,
+    this.options,
+  ) : super(LoaderData(data: modelsFactory.makeInitialState()));
+
+  @override
+  void initialize() {
+    if (options.initializeOnAppStart) {
+      refresh(modelsFactory.getInitialArguments());
+    } else {
+      pushInitialState();
+    }
+  }
+
+  @override
   void refresh([Map<String, Object>? arguments]) {
     pushInitialState();
 

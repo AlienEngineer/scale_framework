@@ -1,5 +1,4 @@
 import 'package:provider/single_child_widget.dart';
-import 'package:scale_framework/resources/http/registry_extensions.dart';
 import 'package:scale_framework/scale_framework.dart';
 import 'package:http/http.dart' as http;
 
@@ -127,6 +126,7 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     required String uri,
     http.Client? client,
     List<String>? requires,
+    LoaderOptions? options,
   }) {
     addSingletonLazy<MapperOf<TDto>>((_) => mapper);
     addSingletonLazy<LoaderModelsFactory<T, TDto>>((_) => factory);
@@ -141,7 +141,13 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       var loaderStateManager = LoaderStateManager<T, TDto>(
         service.get<HttpRequest<TDto>>(),
         service.get<LoaderModelsFactory<T, TDto>>(),
+        options ?? LoaderOptions(),
       );
+
+      if (options != null) {
+        options.mapper.setRefresher(loaderStateManager);
+      }
+
       _loaderStateManagers[T] = loaderStateManager;
       return loaderStateManager;
     });
@@ -196,4 +202,27 @@ abstract class FeatureModule {
 
 abstract class FeatureCluster {
   void setup(ModuleRegistry registry);
+}
+
+class LoaderOptions {
+  final bool initializeOnAppStart;
+  final DataProducerMapperOf mapper;
+
+  const LoaderOptions({
+    this.initializeOnAppStart = true,
+    this.mapper = const StubMapper(),
+  });
+}
+
+class StubMapper implements DataProducerMapperOf {
+  const StubMapper();
+
+  @override
+  Map<String, Object>? map(data) => null;
+
+  @override
+  void push(data) {}
+
+  @override
+  void setRefresher(Refresher refresher) {}
 }
