@@ -6,10 +6,11 @@ export 'resources/resources.dart';
 export 'resources/http/registry_extensions.dart';
 
 class ScaleFramework {
-  /// This flag enables/disables debug mode.
+  /// This enables debug mode.
   ///
   /// Makes the framework print:
   /// - state changes
+  /// - bump the registered dependencies
   static void enableDebugMode() {
     scaleDebugPrint = print;
   }

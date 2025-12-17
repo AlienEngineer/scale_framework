@@ -32,22 +32,13 @@ class HomeWidget extends StatelessWidget {
             child: const Icon(Icons.add),
           ),
           FloatingActionButton(
-            onPressed: () => context
-                .getStateManager<MyStateManager>()
-                .pushData(refreshId.toString()),
+            onPressed: () => context.push(MyId(refreshId.toString())),
             child: const Icon(Icons.multiple_stop),
           ),
         ],
       ),
     );
   }
-}
-
-class MyStateManager extends StateManager<MyId> {
-  final DataProducer<MyId> producer;
-  MyStateManager(this.producer) : super(MyId(''));
-
-  void pushData(String id) => producer.push(MyId(id));
 }
 
 void main() {
@@ -208,15 +199,13 @@ Future<void> pumpApp(
 }) async {
   await tester.pumpWidget(MaterialApp(
     home: ModuleSetup(
-      registry: FeatureModulesRegistry(
-        featureModules: [
-          TestFeatureModule(
-            makeFakeHttpClient(),
-            id,
-            avoidFirstRequest,
-          ),
-        ],
-      ),
+      featureModules: [
+        TestFeatureModule(
+          makeFakeHttpClient(),
+          id,
+          avoidFirstRequest,
+        ),
+      ],
       child: HomeWidget(
         refreshId: refreshId,
         showLoadedOnFailure: showLoadedOnFailure,
@@ -236,11 +225,6 @@ class TestFeatureModule extends FeatureModule {
 
   @override
   void setup(PublicRegistry registry) {
-    registry.addGlobalStateManagerLazy(
-      (service) => MyStateManager(service.get<DataProducer<MyId>>()),
-    );
-    var mapperToMyId = MapperToMyId();
-    registry.addSingletonLazy<DataProducer<MyId>>((service) => mapperToMyId);
     registry.addLoader<BffData, BffDataDto>(
       mapper: MapperOfBffDataDto(),
       factory: BffDataModelsFactory(id: id),
@@ -248,7 +232,7 @@ class TestFeatureModule extends FeatureModule {
       client: httpClient,
       options: LoaderOptions(
         initializeOnAppStart: !avoidFirstRequest,
-        mapper: mapperToMyId,
+        mapper: MapperToMyId(),
       ),
     );
   }

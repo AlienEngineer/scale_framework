@@ -13,9 +13,6 @@ class TestStateManager extends StateManager<int> {
   TestStateManager() : super(0);
 
   void increment() => pushNewState((oldState) => oldState + 1);
-
-  @override
-  void initialize() {}
 }
 
 class TestWidget extends StatelessWidget {
@@ -80,9 +77,7 @@ void main() {
 Future<void> pumpApp(WidgetTester tester) async {
   await tester.pumpWidget(MaterialApp(
     home: ModuleSetup(
-      registry: FeatureModulesRegistry(
-        featureModules: [TestFeatureModule()],
-      ),
+      featureModules: [TestFeatureModule()],
       child: TestWidget(),
     ),
   ));
@@ -91,9 +86,7 @@ Future<void> pumpApp(WidgetTester tester) async {
 Future<void> pumpAppWithCluster(WidgetTester tester) async {
   await tester.pumpWidget(MaterialApp(
     home: ModuleSetup(
-      registry: FeatureModulesRegistry(
-        featureClusters: [TestCluster()],
-      ),
+      featureClusters: [TestCluster()],
       child: TestWidget(),
     ),
   ));

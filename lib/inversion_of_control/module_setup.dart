@@ -5,13 +5,15 @@ import 'package:scale_framework/resources/http/http_module.dart';
 import 'package:scale_framework/scale_framework.dart';
 
 class ModuleSetup extends StatefulWidget {
-  final FeatureModulesRegistry registry;
+  final List<FeatureModule>? featureModules;
+  final List<FeatureCluster>? featureClusters;
   final Widget child;
 
   const ModuleSetup({
     super.key,
-    required this.registry,
     required this.child,
+    this.featureModules,
+    this.featureClusters,
   });
 
   @override
@@ -19,19 +21,25 @@ class ModuleSetup extends StatefulWidget {
 }
 
 class _ModuleSetupState extends State<ModuleSetup> {
+  late FeatureModulesRegistry registry;
+
   @override
   void initState() {
     super.initState();
-    widget.registry.addModule((_) => HttpModule());
-    widget.registry.initialize();
+    registry = FeatureModulesRegistry(
+      featureClusters: widget.featureClusters,
+      featureModules: widget.featureModules,
+    );
+    registry.addModule((_) => HttpModule());
+    registry.initialize();
   }
 
   @override
   Widget build(BuildContext context) {
     return Provider<StateManagerRegistry>(
-      create: (context) => StateManagerRegistry(widget.registry),
+      create: (context) => StateManagerRegistry(registry),
       child: MultiBlocProvider(
-        providers: widget.registry.getProviders(),
+        providers: registry.getProviders(),
         child: widget.child,
       ),
     );

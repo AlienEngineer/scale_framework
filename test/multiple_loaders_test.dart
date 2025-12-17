@@ -107,11 +107,9 @@ Future<void> pumpApp(
 }) async {
   await tester.pumpWidget(MaterialApp(
     home: ModuleSetup(
-      registry: FeatureModulesRegistry(
-        featureModules: [
-          TestFeatureModule(makeFakeHttpClient(), id),
-        ],
-      ),
+      featureModules: [
+        TestFeatureModule(makeFakeHttpClient(), id),
+      ],
       child: HomeWidget(refreshId: refreshId),
     ),
   ));

@@ -58,6 +58,7 @@ abstract class DataProducerMapperOf<T> implements DataProducer<T> {
   void push(T data) => _refresher.refresh(map(data));
 
   Map<String, Object>? map(T data);
+  Type get getProducerType => DataProducer<T>;
 }
 
 class LoaderStateManager<T, TDto> extends StateManager<LoaderData<T>>

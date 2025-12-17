@@ -1,4 +1,5 @@
 import 'package:provider/single_child_widget.dart';
+import 'package:scale_framework/internal/debug_mode.dart';
 import 'package:scale_framework/scale_framework.dart';
 import 'package:http/http.dart' as http;
 
@@ -16,6 +17,9 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     this.featureModules,
     this.featureClusters,
   }) {
+    scaleDebugPrint('');
+    scaleDebugPrint('Feature Module Registry Started');
+    scaleDebugPrint('');
     _setupRegistry();
   }
 
@@ -43,10 +47,15 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       );
       _lazyProviders.clear();
     }
+
     for (var element in _initialization) {
       element();
     }
     _initialization.clear();
+
+    scaleDebugPrint('');
+    scaleDebugPrint('Feature Module Registry Initialized');
+    scaleDebugPrint('');
   }
 
   @override
@@ -57,6 +66,7 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     _providers.add(obj.getProvider());
     _resolvedServices[type] = obj;
     _initialization.add(obj.initialize);
+    scaleDebugPrint('added state manager: $type');
   }
 
   @override
@@ -82,8 +92,18 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       _lazyProviders[T] = (service) => callback(service) as Object;
 
   @override
-  void addSingletonLazy<T>(T Function(ServiceCollection service) callback) =>
-      _lazySingletons[T] = (service) => callback(service) as Object;
+  void addSingletonLazy<T>(T Function(ServiceCollection service) callback) {
+    scaleDebugPrint('added service: $T');
+    _lazySingletons[T] = (service) => callback(service) as Object;
+  }
+
+  void _addSingletonLazyType(
+    Type type,
+    Object Function(ServiceCollection service) callback,
+  ) {
+    scaleDebugPrint('added service: $type');
+    _lazySingletons[type] = (service) => callback(service);
+  }
 
   @override
   void addModule(LazyRecord<FeatureModule> moduleBuilder) =>
@@ -98,9 +118,7 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       composite.add(binder() as DataProducer<T1>);
       _resolvedServices[DataProducer<T1>] = composite;
     } else {
-      addSingletonLazy<DataProducer<T1>>(
-        (_) => binder(),
-      );
+      addSingletonLazy<DataProducer<T1>>((_) => binder());
     }
     addSingletonLazy<DataConsumer<T2>>(
       (service) {
@@ -146,6 +164,10 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
 
       if (options != null) {
         options.mapper.setRefresher(loaderStateManager);
+        _addSingletonLazyType(
+          options.mapper.getProducerType,
+          (service) => options.mapper,
+        );
       }
 
       _loaderStateManagers[T] = loaderStateManager;
@@ -191,9 +213,8 @@ class CompositeProducer<T> implements DataProducer<T> {
 
   void add(DataProducer<T> producer) => producers.add(producer);
 
-  DataConsumer<T1> getConsumer<T1>() {
-    return producers.whereType<DataConsumer<T1>>().first;
-  }
+  DataConsumer<T1> getConsumer<T1>() =>
+      producers.whereType<DataConsumer<T1>>().first;
 }
 
 abstract class FeatureModule {
@@ -204,9 +225,9 @@ abstract class FeatureCluster {
   void setup(ModuleRegistry registry);
 }
 
-class LoaderOptions {
+class LoaderOptions<T> {
   final bool initializeOnAppStart;
-  final DataProducerMapperOf mapper;
+  final DataProducerMapperOf<T> mapper;
 
   const LoaderOptions({
     this.initializeOnAppStart = true,
@@ -214,7 +235,7 @@ class LoaderOptions {
   });
 }
 
-class StubMapper implements DataProducerMapperOf {
+class StubMapper<T> implements DataProducerMapperOf<T> {
   const StubMapper();
 
   @override
@@ -225,4 +246,7 @@ class StubMapper implements DataProducerMapperOf {
 
   @override
   void setRefresher(Refresher refresher) {}
+
+  @override
+  Type get getProducerType => DataProducer<T>;
 }

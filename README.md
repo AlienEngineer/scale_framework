@@ -63,11 +63,15 @@ To ease the access to data without much duplication we need 3 parts, a Dto Mappe
 #### On the FeatureModule
 ```dart
 registry.addLoader<T, TDto>(
-    mapper: MapperOfDto(),    // an implementation of MapperOf<TDto>
-    factory: ModelsFactory(), // an implementation of LoaderModelsFactory<T, TDto> 
-    uri: 'some_url',          // the target url, can include path parameters within {} 
-    client: httpClient,       // [Optional] Used for testing purposes for faking a backend.
-    requires: ['some field'], // [Optional] Tells the framework that this loaders requires specific information to be provided.
+    mapper: MapperOfDto(),            // an implementation of MapperOf<TDto>
+    factory: ModelsFactory(),         // an implementation of LoaderModelsFactory<T, TDto> 
+    uri: 'some_url',                  // the target url, can include path parameters within {} 
+    client: httpClient,               // [Optional] Used for testing purposes for faking a backend.
+    requires: ['some field'],         // [Optional] Tells the framework that this loaders requires specific information to be provided.
+    options: LoaderOptions<MyModel>(  // [Optional] Defines options in behaviour for the loader
+        initializeOnAppStart: true,   // [Optional - Default: true] Defines if the loading should happen automatically on start.
+        mapper: MapperToMyId(),       // [Optional] Defines a mapper to be used for notifications. See "Notify Loader" below.
+    )
 );
 ```
 
@@ -107,6 +111,16 @@ context.refresh<BackendData>(); // Replace BackendData with your type.
 context.refresh<BackendData>({ 'field': 1 });
 ```
 
+### Notify Loader
+
+Having defined a mapper for the notifier then one can do:
+```dart
+context.push<MyModel>(); // Sends a notification to the loader that can handle MyModal.
+```
+
+`MyModel` is going to be captured by the mapper defined in `LoaderOptions<T>` (T must be MyModel) during `addLoader`. 
+
+
 For more generic usage there the example below.
 
 ### Generic Use
@@ -115,9 +129,7 @@ To manage state you'll need a `StateManager<T>`:
 
 ```dart
 class TestStateManager extends StateManager<int> {
-  TestStateManager() : super(
-    0,      // Initial state
-  );
+  TestStateManager() : super(0 /* Initial state */);
 
   // Push New State based on the previous state.
   void increment() => pushNewState((oldState) => oldState + 1);
