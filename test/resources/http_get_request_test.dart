@@ -7,9 +7,18 @@ import 'package:http/http.dart' as http;
 class IocContainer {
   FeatureModulesRegistry registry = FeatureModulesRegistry();
 
-  HttpHeaders getHeaders() => registry.get<HttpHeaders>();
+  HttpGlobalInterception getHttpGlobalInterceptor() =>
+      registry.get<HttpGlobalInterception>();
 
   HttpRequest<String> makeRequest(String uri, [List<String>? requires]) {
+    setupHttpRequest(uri, requires);
+
+    return getRequest();
+  }
+
+  HttpRequest<String> getRequest() => registry.get<HttpRequest<String>>();
+
+  void setupHttpRequest(String uri, [List<String>? requires]) {
     registry.addModule((_) => HttpModule());
     registry.addSingletonLazy<MapperOf<String>>(
       (service) => StubStringMapper(),
@@ -19,8 +28,6 @@ class IocContainer {
       client: makeFakeHttpClient(),
       requires: requires,
     );
-
-    return registry.get<HttpRequest<String>>();
   }
 }
 
@@ -33,6 +40,7 @@ void main() {
 
       expect(result, 'some result');
     });
+
     test('providing data needs, without fulfillment throws exception',
         () async {
       var request = IocContainer().makeRequest(
@@ -51,6 +59,7 @@ void main() {
         })),
       );
     });
+
     test(
         'providing data needs with fulfillment '
         'makes the request with data in headers', () async {
@@ -60,12 +69,69 @@ void main() {
         ['fieldX'],
       );
 
-      container.getHeaders().resolveRequirement('fieldX', 'some value');
+      container
+          .getHttpGlobalInterceptor()
+          .resolveRequirement('fieldX', 'some value');
 
       var result = await request.execute();
 
       expect(result, 'some result');
     });
+
+    test(
+        'providing header data '
+        'makes the request with data in headers', () async {
+      var container = IocContainer();
+      var request = container.makeRequest(
+        'some_resource/1',
+        ['fieldX'],
+      );
+
+      container.getHttpGlobalInterceptor().set('fieldX', 'some value');
+
+      var result = await request.execute();
+
+      expect(result, 'some result');
+    });
+
+    test(
+        'providing header data '
+        'makes the request with data in headers'
+        'even when its not required', () async {
+      var container = IocContainer();
+      var request = container.makeRequest(
+        'some_resource/2',
+        ['fieldX'],
+      );
+
+      var interceptor = container.getHttpGlobalInterceptor();
+      interceptor.set('fieldX', 'some value');
+      interceptor.set('fieldY', 'this is the value of fieldY');
+
+      var result = await request.execute();
+
+      expect(result, 'this is the value of fieldY');
+    });
+
+    test(
+        'resolving more requirements than what is needed '
+        'makes the request with just the needed data in headers', () async {
+      var container = IocContainer();
+      var request = container.makeRequest(
+        'some_resource/1',
+        ['fieldX'],
+      );
+
+      var interceptor = container.getHttpGlobalInterceptor();
+      interceptor.resolveRequirement('fieldX', 'some value');
+      // This fieldY is going to be ignored as it is not needed.
+      interceptor.resolveRequirement('fieldY', 'some value');
+
+      var result = await request.execute();
+
+      expect(result, 'some result');
+    });
+
     test('providing arguments will make request with those arguments',
         () async {
       var request = IocContainer().makeRequest('some_resource/{id}');
@@ -74,6 +140,7 @@ void main() {
 
       expect(result, 'some result');
     });
+
     test('throws exception when the resource was Not Found (404)', () async {
       var request = IocContainer().makeRequest('some_resource/-1');
 
@@ -83,6 +150,7 @@ void main() {
             (e) => e is ResourceNotFoundException && e.statusCode == 404)),
       );
     });
+
     test('throws exception when the resource returns a server error (500)',
         () async {
       var request = IocContainer().makeRequest('some_resource/500');
@@ -93,11 +161,35 @@ void main() {
       );
     });
   });
+
+  group('multiple requests', () {
+    test('execute a couple of requests returns the expected results', () async {
+      var container = IocContainer();
+      container.setupHttpRequest('some_resource/{id}');
+      var request = container.getRequest();
+
+      var result1 = await request.execute({'id': 1});
+      var result2 = await request.execute({'id': 2});
+
+      expect(result1, 'some result');
+      expect(result2, 'some result 2');
+    });
+  });
 }
 
 MockClient makeFakeHttpClient() => MockClient((request) async {
+      if (request.url.toString() == 'some_resource/2' &&
+          request.headers.keys.length > 1) {
+        return http.Response(request.headers['fieldY'].toString(), 200);
+      }
+      if (request.headers.keys.length > 1) {
+        return http.Response("invalid headers", 500);
+      }
       if (request.url.toString() == 'some_resource/1') {
         return http.Response("some result", 200);
+      }
+      if (request.url.toString() == 'some_resource/2') {
+        return http.Response("some result 2", 200);
       }
       if (request.url.toString() == 'some_resource/500') {
         return http.Response("there was an error processing the request", 500);

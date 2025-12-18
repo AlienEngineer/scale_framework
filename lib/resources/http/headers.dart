@@ -1,10 +1,14 @@
-abstract class HttpHeaders {
+/// Represents the headers for all requests.
+abstract class HttpGlobalInterception {
   /// Resolves a requirement with a value.
   void resolveRequirement(String requirement, String value);
 
   /// Get a list with all the keys that are going to be sent in the
   /// request headers
   List<String> getProvidedHeaders();
+
+  // Set a key value pair to the headers. Does override.
+  void set(String key, String value);
 }
 
 abstract class HttpHeadersFactory {
@@ -22,7 +26,8 @@ class StubHeadersFactory implements HttpHeadersFactory {
   void pushNeeds(List<String> needs) {}
 }
 
-class DefaultHttpHeadersFactory implements HttpHeadersFactory, HttpHeaders {
+class DefaultHttpHeadersFactory
+    implements HttpHeadersFactory, HttpGlobalInterception {
   Map<String, String> resolved = {};
 
   @override
@@ -60,6 +65,9 @@ class DefaultHttpHeadersFactory implements HttpHeadersFactory, HttpHeaders {
       throw MissingRequirementsError(unresolved);
     }
   }
+
+  @override
+  void set(String key, String value) => resolved[key] = value;
 }
 
 class MissingRequirementsError extends Error {

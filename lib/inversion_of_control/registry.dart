@@ -23,6 +23,8 @@ abstract class PublicRegistry {
     List<String>? requires,
     LoaderOptions? options,
   });
+
+  bool alreadyRegistered<T>();
 }
 
 abstract class ServiceCollection {

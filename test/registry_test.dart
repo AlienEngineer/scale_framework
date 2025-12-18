@@ -8,6 +8,17 @@ main() {
 
     expect(registry.get<DataConsumer<int>>(), isNotNull);
   });
+
+  test('registering two http requests for the same DTO throws exception', () {
+    var registry = FeatureModulesRegistry();
+    registry.addHttpGetRequest<String>(uri: 'somepath');
+    expect(() => registry.addHttpGetRequest<String>(uri: 'someotherpath'),
+        throwsA(predicate((e) {
+      expect(e.toString(), 'Unable to register an http request for: String.');
+      return e is UnableToRegisterHttpRequestForDto;
+    })));
+  });
+
   test('getting a data loader without registration throws exception', () {
     var registry = FeatureModulesRegistry();
 

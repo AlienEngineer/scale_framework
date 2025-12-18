@@ -5,6 +5,6 @@ class HttpModule implements FeatureModule {
   void setup(PublicRegistry registry) {
     var factory = DefaultHttpHeadersFactory();
     registry.addSingletonLazy<HttpHeadersFactory>((service) => factory);
-    registry.addSingletonLazy<HttpHeaders>((service) => factory);
+    registry.addSingletonLazy<HttpGlobalInterception>((service) => factory);
   }
 }

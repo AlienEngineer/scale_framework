@@ -61,6 +61,7 @@ ScaleFramework.EnableDebugMode();
 To ease the access to data without much duplication we need 3 parts, a Dto Mapper, a Business Model Factory and a URI:
 
 #### On the FeatureModule
+
 ```dart
 registry.addLoader<T, TDto>(
     mapper: MapperOfDto(),            // an implementation of MapperOf<TDto>

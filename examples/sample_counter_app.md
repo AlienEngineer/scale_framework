@@ -51,8 +51,8 @@ class CountWidget extends StatelessWidget {
 ```dart
 MaterialApp(
   home: ModuleSetup(
-    featureClusters: [TestCluster()],
-    child: TestWidget(),
+    featureModules: [CounterFeatureModule()],
+    child: CountWidget(),
   ),
 )
 ```

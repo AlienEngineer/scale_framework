@@ -4,3 +4,4 @@ export 'http/http_get_request.dart';
 export 'http/exceptions.dart';
 export 'http/intents.dart';
 export 'http/headers.dart';
+export 'http/interceptors.dart';

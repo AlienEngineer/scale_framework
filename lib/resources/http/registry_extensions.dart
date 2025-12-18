@@ -6,15 +6,20 @@ extension HttpRegistrationExtensions on PublicRegistry {
     required String uri,
     http.Client? client,
     List<String>? requires,
-  }) =>
-      addSingletonLazy<HttpRequest<TDto>>(
-        (service) => HttpGetRequest<TDto>(
-          uri: uri,
-          mapper: service.get<MapperOf<TDto>>(),
-          client: client ?? service.get<http.Client>(),
-          headersFactory: makeFactory(service, requires),
-        ),
-      );
+  }) {
+    if (alreadyRegistered<HttpRequest<TDto>>()) {
+      throw UnableToRegisterHttpRequestForDto<TDto>();
+    }
+
+    addSingletonLazy<HttpRequest<TDto>>(
+      (service) => HttpGetRequest<TDto>(
+        uri: uri,
+        mapper: service.get<MapperOf<TDto>>(),
+        client: client ?? service.get<http.Client>(),
+        globalInterceptor: makeFactory(service, requires),
+      ),
+    );
+  }
 
   HttpHeadersFactory makeFactory(
     ServiceCollection service,
@@ -27,4 +32,9 @@ extension HttpRegistrationExtensions on PublicRegistry {
     headersFactory.pushNeeds(needs);
     return headersFactory;
   }
+}
+
+class UnableToRegisterHttpRequestForDto<T> extends Error {
+  @override
+  String toString() => "Unable to register an http request for: $T.";
 }
