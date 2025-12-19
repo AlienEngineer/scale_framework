@@ -1,3 +1,4 @@
+import 'package:http/http.dart' as http;
 import 'package:scale_framework/internal/debug_mode.dart';
 import 'package:scale_framework/resources/http/interceptors/arguments_interceptor.dart';
 import 'package:scale_framework/scale_framework.dart';
@@ -20,5 +21,7 @@ class HttpModule implements FeatureModule {
     registry.addSingletonLazy<HttpConfigurationInternal>(
       (_) => httpConfiguration,
     );
+
+    registry.addSingletonLazy<http.Client>((service) => http.Client());
   }
 }

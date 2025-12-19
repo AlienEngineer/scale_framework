@@ -153,6 +153,20 @@ To react as state changes:
   );
 ```
 
+## Http Configuration
+
+The framework includes a way to manipulate the http requests via `HttpRequestInterceptor` and in order to configure an interceptor one must:
+
+```dart
+
+// access HttpConfiguration via registry
+var configuration = registry.get<HttpConfiguration>();
+
+configuration.addRequestInterceptors([
+  /* MyCustomRequestInterceptor */
+]);
+
+```
 
 
 ## Sharing data between features

@@ -11,6 +11,7 @@ class ArgumentsHttpRequestInterceptor implements HttpRequestInterceptor {
   Uri getUri(Uri uri, Map<String, Object>? arguments) =>
       uri.replace(pathSegments: convertSegments(uri, arguments ?? {}));
 
+  // TODO: ensure that all placeholders are replaced or throw exception
   List<String> convertSegments(Uri uri, Map<String, Object>? arguments) =>
       uri.pathSegments.map((e) {
         if (e.startsWith('{') && e.endsWith('}')) {

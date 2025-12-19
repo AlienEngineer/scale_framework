@@ -13,7 +13,6 @@ abstract class PublicRegistry {
   void addGlobalStateManagerLazy<T extends StateManager>(
       LazyRecord<T> callback);
   void addSingletonLazy<T>(LazyRecord<T> callback);
-  void addSingletonLazyM<T1, T2 extends T1>(LazyRecord<T1> callback);
   void addDataBinder<T1, T2>(DataBinder<T1, T2> Function() binder);
 
   void addLoader<T, TDto>({

@@ -183,15 +183,6 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     }
     return _loaderStateManagers[T] as LoaderStateManager;
   }
-
-  @override
-  void addSingletonLazyM<T1, T2 extends T1>(LazyRecord<T1> callback) {
-    addSingletonLazy<T1>((service) {
-      var instance = callback(service);
-      addSingletonLazy<T2>((_) => instance as T2);
-      return instance;
-    });
-  }
 }
 
 class UnableToResolveDependency<T> extends Error {

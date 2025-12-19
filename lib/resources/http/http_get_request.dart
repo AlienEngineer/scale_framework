@@ -22,7 +22,6 @@ class HttpGetRequest<TResult> implements HttpRequest<TResult> {
     this.globalInterceptor = const StubHeadersFactory(),
   });
 
-  // TODO: ensure that all placeholders are replaced or throw exception
   @override
   Future<TResult> execute([Map<String, Object>? arguments]) async {
     var context = httpConfiguration.interceptRequest(_makeContext(arguments));
