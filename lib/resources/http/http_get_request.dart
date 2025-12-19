@@ -1,6 +1,8 @@
 import 'package:scale_framework/resources/resources.dart';
 import 'package:http/http.dart' as http;
 
+import 'http_configuration.dart';
+
 abstract class HttpRequest<TResult> {
   Future<TResult> execute([Map<String, Object>? arguments]);
 }
@@ -10,23 +12,23 @@ class HttpGetRequest<TResult> implements HttpRequest<TResult> {
   http.Client client;
   MapperOf<TResult> mapper;
   HttpHeadersFactory globalInterceptor;
-  HttpRequestInterceptor<TResult> requestInterceptor;
+  final HttpConfigurationInternal httpConfiguration;
 
   HttpGetRequest({
     required this.uri,
     required this.mapper,
     required this.client,
+    required this.httpConfiguration,
     this.globalInterceptor = const StubHeadersFactory(),
-    this.requestInterceptor = const StubHttpRequestInterceptor(),
   });
 
   // TODO: ensure that all placeholders are replaced or throw exception
   @override
   Future<TResult> execute([Map<String, Object>? arguments]) async {
-    var response = await client.get(
-      Uri.parse(getUri(arguments)),
-      headers: globalInterceptor.make(),
-    );
+    var context = httpConfiguration.interceptRequest(_makeContext(arguments));
+
+    var response = await client.get(context.uri, headers: context.headers);
+
     if (response.statusCode == 404) {
       throw ResourceNotFoundException(404);
     }
@@ -35,6 +37,13 @@ class HttpGetRequest<TResult> implements HttpRequest<TResult> {
     }
     return mapper.map(response.body);
   }
+
+  HttpRequestContext _makeContext(Map<String, Object>? arguments) =>
+      HttpRequestContext(
+        Uri.parse(uri),
+        globalInterceptor.make(),
+        arguments,
+      );
 
   String getUri(Map<String, Object>? arguments) {
     var tempUri = uri;
@@ -51,7 +60,7 @@ class StubHttpRequestInterceptor<TResult>
     implements HttpRequestInterceptor<TResult> {
   const StubHttpRequestInterceptor();
   @override
-  HttpRequest1 intercept(HttpRequest1 request) {
+  HttpRequestContext intercept(HttpRequestContext request) {
     return request;
   }
 }

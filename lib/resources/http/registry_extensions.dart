@@ -1,3 +1,4 @@
+import 'package:scale_framework/resources/http/http.dart';
 import 'package:scale_framework/scale_framework.dart';
 import 'package:http/http.dart' as http;
 
@@ -17,6 +18,7 @@ extension HttpRegistrationExtensions on PublicRegistry {
         mapper: service.get<MapperOf<TDto>>(),
         client: client ?? service.get<http.Client>(),
         globalInterceptor: makeFactory(service, requires),
+        httpConfiguration: service.get<HttpConfigurationInternal>(),
       ),
     );
   }

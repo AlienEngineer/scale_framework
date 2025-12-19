@@ -132,6 +132,7 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     );
   }
 
+  @override
   bool alreadyRegistered<T>() =>
       _resolvedServices.containsKey(T) || _lazySingletons.containsKey(T);
 
@@ -181,6 +182,15 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       throw UnableToFindStateManager<T>();
     }
     return _loaderStateManagers[T] as LoaderStateManager;
+  }
+
+  @override
+  void addSingletonLazyM<T1, T2 extends T1>(LazyRecord<T1> callback) {
+    addSingletonLazy<T1>((service) {
+      var instance = callback(service);
+      addSingletonLazy<T2>((_) => instance as T2);
+      return instance;
+    });
   }
 }
 

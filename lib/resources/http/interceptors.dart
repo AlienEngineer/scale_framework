@@ -1,12 +1,21 @@
 abstract class HttpRequestInterceptor<TDto> {
-  HttpRequest1 intercept(HttpRequest1 request);
+  HttpRequestContext intercept(HttpRequestContext request);
 }
 
-class HttpRequest1 {
-  final Uri _uri;
-  final Map<String, String> _headers;
-  HttpRequest1(this._uri, this._headers);
+class HttpRequestContext {
+  final Uri uri;
+  final Map<String, String> headers;
+  final Map<String, Object>? arguments;
+  HttpRequestContext(this.uri, this.headers, this.arguments);
 
-  HttpRequest1 copyWith({Uri? uri, Map<String, String>? headers}) =>
-      HttpRequest1(uri ?? _uri, {..._headers, ...headers ?? {}});
+  HttpRequestContext copyWith({
+    Uri? uri,
+    Map<String, String>? headers,
+    Map<String, Object>? arguments,
+  }) =>
+      HttpRequestContext(
+        uri ?? this.uri,
+        {...this.headers, ...headers ?? {}},
+        {...this.arguments ?? {}, ...arguments ?? {}},
+      );
 }
