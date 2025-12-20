@@ -3,6 +3,14 @@
 To create the simple counter app we need 3 parts: A StateManager, a Widget, and a FeatureModule that brings them together.
  
 <table>
+
+<tr>
+<td colspan="2" align="center">
+
+![](counter.gif)
+
+</td>        
+</tr>
     <tr>
         <td> State Manager </td> 
         <td> Widget </td>
@@ -111,13 +119,6 @@ class MyApp extends StatelessWidget {
 ```
 
 </td>
-</tr>
-<tr>
-<td colspan="2">
-
-![](counter.gif)
-
-</td>        
 </tr>
 <tr>
 </table>
