@@ -193,7 +193,7 @@ packages:
       path: "../scale_framework"
       relative: true
     source: path
-    version: "1.0.17"
+    version: "1.0.18"
   sky_engine:
     dependency: transitive
     description: flutter
