@@ -15,8 +15,8 @@ To create the simple counter app we need 3 parts: A StateManager, a Widget, and 
         <td> State Manager </td> 
         <td> Widget </td>
     </tr>
-<tr align="start">
-<td>
+<tr>
+<td valign="top">
 
 
 ```dart
@@ -31,7 +31,7 @@ class CounterStateManager extends StateManager<int> {
 ```
 
 </td>
-<td>
+<td valign="top">
 
 ```dart
 import 'package:flutter/material.dart';
@@ -71,7 +71,7 @@ class CountWidget extends StatelessWidget {
         <td> Putting it all together </td>
     </tr>
 <tr>
-<td>
+<td valign="top">
 
 
 ```dart
@@ -88,7 +88,7 @@ class CounterFeatureModule extends FeatureModule {
 ```
 
 </td>
-<td>
+<td valign="top">
 
 ```dart
 import 'package:flutter/material.dart';
