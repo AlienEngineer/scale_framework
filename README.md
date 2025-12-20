@@ -1,16 +1,18 @@
 # Scale Framework
 
+### Examples:
+
+- [simple counter app](scale_framework/example/simple_counter_app.md)
+- [data_loader app](scale_framework/example/backend_data_loader_sample_app.md)
+
 To initialize the framework:
 
 ```dart
-  // Make sure this only is instantiated once (not affected by hot reload)
-  final registry = FeatureModulesRegistry(
-    featureClusters: [/* Feature Clusters go here */],
-    featureModules: [/* Feature Modules go here */],
-  );
+
   MaterialApp(
     home: ModuleSetup(
-      registry: registry,
+      featureClusters: [/* Feature Clusters go here */],
+      featureModules: [/* Feature Modules go here */],
       child: /* home here */,
     ),
   )
