@@ -15,7 +15,7 @@ To create the simple counter app we need 3 parts: A StateManager, a Widget, and 
         <td> State Manager </td> 
         <td> Widget </td>
     </tr>
-<tr>
+<tr align="start">
 <td>
 
 
