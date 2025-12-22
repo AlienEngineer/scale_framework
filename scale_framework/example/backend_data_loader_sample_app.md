@@ -1,5 +1,7 @@
 ## Basic Counter App
 
+In this example, the loading happens on app start and the user can refresh by pressing the floating button.
+
 ![](loader.gif)
 
 To create a widget that handles data loading from a backend.
