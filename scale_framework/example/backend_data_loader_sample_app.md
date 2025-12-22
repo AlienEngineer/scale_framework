@@ -1,8 +1,26 @@
 ## Basic Counter App
 
 In this example, the loading happens on app start and the user can refresh by pressing the floating button.
+<table>
+<tr>
+<td>Load at init</td>
+<td>Deferred initialization</td>
+</tr>
+<tr>
+<td>
 
 ![](loader.gif)
+
+</td>
+<td>
+
+![](delayed_loader.gif)
+
+</td>
+</tr>
+</table>
+
+
 
 To create a widget that handles data loading from a backend.
 
@@ -90,6 +108,25 @@ class MyFeatureModule extends FeatureModule {
       mapper: MapperOfBffDataDto(),
       factory: BffDataModelsFactory(id: id),
       uri: 'some_resource/{id}',
+    );
+  }
+}
+```
+
+#### Deferred loading
+
+The idea of this configuration is to enable us to not load resources at app start.
+
+```dart
+class MyFeatureModule extends FeatureModule {
+  @override
+  void setup(PublicRegistry registry) {
+    registry.addLoader<BffData, BffDataDto>(
+      mapper: MapperOfBffDataDto(),
+      factory: BffDataModelsFactory(id: id),
+      uri: 'some_resource/{id}',
+      // This line defines the option to not initialize on app start.
+      options: LoaderOptions(initializeOnAppStart: false),
     );
   }
 }

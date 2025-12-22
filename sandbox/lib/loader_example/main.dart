@@ -31,7 +31,7 @@ class MyWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: const BffDataTestWidget(),
+      body: Center(child: const BffDataTestWidget()),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.refresh<BffData>({'id': 1});

@@ -22,6 +22,10 @@ To initialize the framework:
 
 Features must expose a `FeatureModule` or `FeatureCluster` to be used by the App. These are their IOC Containers:
 
+### Feature Module
+
+A feature module should contain all dependencies that our feature requires.
+
 Example code for `FeatureModule` from `feature_1`:
 ```dart
 class GarageModule implements FeatureModule {
@@ -33,6 +37,10 @@ class GarageModule implements FeatureModule {
   }
 }
 ```
+
+### Cluster Module
+
+A cluster module is a collection of feature modules.
 
 
 Example code for `ClusterModule` from `App`:
