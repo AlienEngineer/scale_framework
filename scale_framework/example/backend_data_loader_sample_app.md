@@ -1,5 +1,7 @@
 ## Basic Counter App
 
+![](loader.gif)
+
 To create a widget that handles data loading from a backend.
 
 ### Data From Backend
@@ -101,5 +103,3 @@ MaterialApp(
   ),
 )
 ```
-
-![](loader.gif)
