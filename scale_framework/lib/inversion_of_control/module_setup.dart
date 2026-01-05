@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:scale_framework/internal/debug_mode.dart';
 import 'package:scale_framework/resources/http/http_module.dart';
 import 'package:scale_framework/scale_framework.dart';
 
@@ -8,12 +9,14 @@ class ModuleSetup extends StatefulWidget {
   final List<FeatureModule>? featureModules;
   final List<FeatureCluster>? featureClusters;
   final Widget child;
+  final void Function(HttpGlobalInterception global)? initialize;
 
   const ModuleSetup({
     super.key,
     required this.child,
     this.featureModules,
     this.featureClusters,
+    this.initialize,
   });
 
   @override
@@ -33,6 +36,8 @@ class _ModuleSetupState extends State<ModuleSetup> {
         ...widget.featureModules ?? [],
       ],
     );
+    scaleDebugPrint('initializing global interception');
+    widget.initialize?.call(registry.get<HttpGlobalInterception>());
     registry.initialize();
   }
 

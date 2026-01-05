@@ -1,14 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/testing.dart';
+import 'package:scale_framework/resources/http/http_configuration.dart';
 import 'package:scale_framework/resources/http/http_module.dart';
 import 'package:scale_framework/scale_framework.dart';
 import 'package:http/http.dart' as http;
 
 class IocContainer {
-  FeatureModulesRegistry registry = FeatureModulesRegistry();
+  FeatureModulesRegistry registry = FeatureModulesRegistry(
+    featureModules: [HttpModule()],
+  );
 
   HttpGlobalInterception getHttpGlobalInterceptor() =>
       registry.get<HttpGlobalInterception>();
+
+  HttpConfiguration getHttpConfiguration() => registry.get<HttpConfiguration>();
 
   HttpRequest<String> makeRequest(String uri, [List<String>? requires]) {
     setupHttpRequest(uri, requires);
@@ -19,7 +24,6 @@ class IocContainer {
   HttpRequest<String> getRequest() => registry.get<HttpRequest<String>>();
 
   void setupHttpRequest(String uri, [List<String>? requires]) {
-    registry.addModule((_) => HttpModule());
     registry.addSingletonLazy<MapperOf<String>>(
       (service) => StubStringMapper(),
     );
@@ -36,6 +40,20 @@ void main() {
   group('executing an http get', () {
     test('returns the result successfully for 200', () async {
       var request = IocContainer().makeRequest('some_resource/1');
+
+      var result = await request.execute();
+
+      expect(result, 'some result');
+    });
+    test('when an interceptor fails it is ignored', () async {
+      var iocContainer = IocContainer();
+
+      var configuration = iocContainer.getHttpConfiguration();
+      configuration.addRequestInterceptors([
+        ThrowErrorInterception(),
+      ]);
+
+      var request = iocContainer.makeRequest('some_resource/1');
 
       var result = await request.execute();
 
@@ -176,6 +194,11 @@ void main() {
       expect(result2, 'some result 2');
     });
   });
+}
+
+class ThrowErrorInterception implements HttpRequestInterceptor {
+  @override
+  HttpRequestContext intercept(HttpRequestContext request) => throw Error();
 }
 
 MockClient makeFakeHttpClient() => MockClient((request) async {

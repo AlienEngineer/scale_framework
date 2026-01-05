@@ -46,7 +46,9 @@ class DefaultHttpHeadersFactory
   @override
   void pushNeeds(List<String> needs) {
     for (var need in needs) {
-      resolved[need] = 'unresolved';
+      if (!resolved.containsKey(need)) {
+        resolved[need] = 'unresolved';
+      }
     }
   }
 

@@ -64,24 +64,30 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
   void _storeStateManager(Type type, dynamic obj) {
     _providers.add(obj.getProvider());
     _resolvedServices[type] = obj;
-    _initialization.add(obj.initialize);
+    _initialization.add(() {
+      obj.internalInitialize(this);
+      obj.initialize();
+    });
     scaleDebugPrint('added state manager: $type');
   }
 
   @override
-  T get<T>() {
+  T get<T>() => tryGet(() => throw UnableToResolveDependency<T>());
+
+  @override
+  T tryGet<T>(T Function() fallback) {
     if (alreadyResolved<T>()) {
       return _resolvedServices[T] as T;
     }
 
     var callback = _lazySingletons[T];
     if (callback == null) {
-      throw UnableToResolveDependency<T>();
+      return fallback();
     }
 
     _resolvedServices[T] = callback(this);
 
-    return get<T>();
+    return tryGet<T>(fallback);
   }
 
   @override

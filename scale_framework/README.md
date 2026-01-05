@@ -31,9 +31,7 @@ Example code for `FeatureModule` from `feature_1`:
 class GarageModule implements FeatureModule {
   void setup(PublicRegistry registry) {
     registry.addGlobalStateManager(GarageLoader());
-    registry.addGlobalStateManager(
-      VehicleSelectionStateManager(vehicleSelectedNotifier),
-    );
+    registry.addGlobalStateManager(VehicleSelectionStateManager());
   }
 }
 ```
@@ -49,9 +47,7 @@ class AppCluster implements FeatureCluster {
   @override
   void setup(ModuleRegistry registry) {
     registry.addModule(
-      (service) => GarageModule(
-        vehicleSelectedNotifier: service.get<DataProducer<Vehicle>>(),
-      ),
+      (service) => GarageModule(),
     );
   }
 }
