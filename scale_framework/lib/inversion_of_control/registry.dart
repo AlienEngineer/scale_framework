@@ -23,6 +23,16 @@ abstract class PublicRegistry {
   });
 
   bool alreadyRegistered<T>();
+
+  Binder<T> addBinder<T>();
+}
+
+abstract class Binder<T> {
+  void addConsumer<T1>(T1 Function(T data) mapper);
+}
+
+abstract class Mapper<TFrom, TTo> {
+  TTo map(TFrom data);
 }
 
 abstract class ServiceCollection {

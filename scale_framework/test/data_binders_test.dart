@@ -25,9 +25,7 @@ class TestWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StateBuilder<Brand>(
-        builder: (context, state) => Text(state.brand),
-      ),
+      body: StateBuilder<Brand>(builder: (context, state) => Text(state.brand)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context
             .getStateManager<VehicleStateManager>()
@@ -40,9 +38,7 @@ class TestWidget extends StatelessWidget {
 class VehicleStateManager extends StateManager<Vehicle> {
   VehicleStateManager() : super(Vehicle(''));
 
-  void loadVehicle(String brand) {
-    pushNewState((_) => Vehicle(brand));
-  }
+  void loadVehicle(String brand) => pushNewState((_) => Vehicle(brand));
 }
 
 class BrandStateManager extends StateManager<Brand> {
@@ -52,16 +48,13 @@ class BrandStateManager extends StateManager<Brand> {
 class TestFeatureModule implements FeatureModule {
   @override
   void setup(PublicRegistry registry) {
-    registry.addDataBinder<Vehicle, Brand>(() => VehicleToBrandBinder());
+    registry
+        .addBinder<Vehicle>()
+        .addConsumer<Brand>((data) => Brand(data.brand));
 
-    registry.addGlobalStateManagerLazy((service) => VehicleStateManager());
-    registry.addGlobalStateManagerLazy((service) => BrandStateManager());
+    registry.addGlobalStateManagerLazy((_) => VehicleStateManager());
+    registry.addGlobalStateManagerLazy((_) => BrandStateManager());
   }
-}
-
-class VehicleToBrandBinder extends DataBinder<Vehicle, Brand> {
-  @override
-  Brand map(Vehicle data) => Brand(data.brand);
 }
 
 class Brand {

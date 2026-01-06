@@ -115,6 +115,13 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       moduleBuilder(this).setup(this);
 
   @override
+  Binder<T> addBinder<T>() {
+    var test = InternalBinder<T>(this);
+    addSingletonLazy<DataProducer<T>>((_) => test);
+    return test;
+  }
+
+  @override
   void addDataBinder<T1, T2>(DataBinder<T1, T2> Function() binder) {
     if (alreadyRegistered<DataProducer<T1>>()) {
       var producer = get<DataProducer<T1>>();
@@ -186,6 +193,36 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     }
     return _loaderStateManagers[T] as LoaderStateManager;
   }
+}
+
+class InternalBinder<T> implements DataProducer<T>, Binder<T> {
+  final List<DataProducer<T>> producers = [];
+  final PublicRegistry registry;
+
+  InternalBinder(this.registry);
+
+  @override
+  void push(T data) {
+    for (var producer in producers) {
+      producer.push(data);
+    }
+  }
+
+  @override
+  void addConsumer<T1>(T1 Function(T data) mapper) {
+    var binder = GenericDataBinder<T, T1>(mapper);
+    registry.addSingletonLazy<DataConsumer<T1>>((_) => binder);
+    producers.add(binder);
+  }
+}
+
+class GenericDataBinder<T1, T2> extends DataBinder<T1, T2> {
+  final T2 Function(T1 data) mapper;
+
+  GenericDataBinder(this.mapper);
+
+  @override
+  T2 map(T1 data) => mapper(data);
 }
 
 class UnableToResolveDependency<T> extends Error {

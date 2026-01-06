@@ -46,9 +46,7 @@ Example code for `ClusterModule` from `App`:
 class AppCluster implements FeatureCluster {
   @override
   void setup(ModuleRegistry registry) {
-    registry.addModule(
-      (service) => GarageModule(),
-    );
+    registry.addModule((_) => GarageModule());
   }
 }
 ```
