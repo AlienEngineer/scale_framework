@@ -36,7 +36,7 @@ class TestWidget extends StatelessWidget {
 class TestFeatureModule extends FeatureModule {
   @override
   void setup(PublicRegistry registry) {
-    registry.addGlobalStateManager(TestStateManager());
+    registry.addGlobalStateManager((_) => TestStateManager());
   }
 }
 

@@ -52,19 +52,17 @@ class TestFeatureModule implements FeatureModule {
         .addBinder<Vehicle>()
         .addConsumer<Brand>((data) => Brand(data.brand));
 
-    registry.addGlobalStateManagerLazy((_) => VehicleStateManager());
-    registry.addGlobalStateManagerLazy((_) => BrandStateManager());
+    registry.addGlobalStateManager((_) => VehicleStateManager());
+    registry.addGlobalStateManager((_) => BrandStateManager());
   }
 }
 
 class Brand {
   final String brand;
-
   const Brand(this.brand);
 }
 
 class Vehicle {
   final String brand;
-
   const Vehicle(this.brand);
 }

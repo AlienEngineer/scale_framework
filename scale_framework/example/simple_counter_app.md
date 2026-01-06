@@ -20,7 +20,7 @@ class CounterStateManager extends StateManager<int> {
 class CounterFeatureModule extends FeatureModule {
   @override
   void setup(PublicRegistry registry) {
-    registry.addGlobalStateManager(CounterStateManager());
+    registry.addGlobalStateManager((_) => CounterStateManager());
   }
 }
 ```

@@ -11,7 +11,7 @@ extension HttpRegistrationExtensions on PublicRegistry {
       throw UnableToRegisterHttpRequestForDto<TDto>();
     }
 
-    addSingletonLazy<HttpRequest<TDto>>(
+    addSingleton<HttpRequest<TDto>>(
       (service) => HttpGetRequest<TDto>(
         uri: uri,
         mapper: service.get<MapperOf<TDto>>(),

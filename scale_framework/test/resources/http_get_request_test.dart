@@ -24,11 +24,11 @@ class IocContainer {
   HttpRequest<String> getRequest() => registry.get<HttpRequest<String>>();
 
   void setupHttpRequest(String uri, [List<String>? requires]) {
-    registry.addSingletonLazy<MapperOf<String>>(
+    registry.addSingleton<MapperOf<String>>(
       (service) => StubStringMapper(),
     );
 
-    registry.addSingletonLazy<http.Client>((service) => makeFakeHttpClient());
+    registry.addSingleton<http.Client>((service) => makeFakeHttpClient());
     registry.addHttpGetRequest<String>(
       uri: uri,
       requires: requires,

@@ -8,10 +8,8 @@ abstract class ModuleRegistry {
 typedef LazyRecord<T> = T Function(ServiceCollection service);
 
 abstract class PublicRegistry {
-  void addGlobalStateManager<T extends StateManager>(T obj);
-  void addGlobalStateManagerLazy<T extends StateManager>(
-      LazyRecord<T> callback);
-  void addSingletonLazy<T>(LazyRecord<T> callback);
+  void addGlobalStateManager<T extends StateManager>(LazyRecord<T> callback);
+  void addSingleton<T>(LazyRecord<T> callback);
   void addDataBinder<T1, T2>(DataBinder<T1, T2> Function() binder);
 
   void addLoader<T, TDto>({

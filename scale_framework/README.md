@@ -30,8 +30,8 @@ Example code for `FeatureModule` from `feature_1`:
 ```dart
 class GarageModule implements FeatureModule {
   void setup(PublicRegistry registry) {
-    registry.addGlobalStateManager(GarageLoader());
-    registry.addGlobalStateManager(VehicleSelectionStateManager());
+    registry.addGlobalStateManager((_) => GarageLoader());
+    registry.addGlobalStateManager((_) => VehicleSelectionStateManager());
   }
 }
 ```

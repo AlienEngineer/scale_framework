@@ -57,10 +57,6 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     scaleDebugPrint('');
   }
 
-  @override
-  void addGlobalStateManager<T extends StateManager>(T obj) =>
-      _storeStateManager(T, obj);
-
   void _storeStateManager(Type type, dynamic obj) {
     _providers.add(obj.getProvider());
     _resolvedServices[type] = obj;
@@ -91,13 +87,13 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
   }
 
   @override
-  void addGlobalStateManagerLazy<T extends StateManager>(
+  void addGlobalStateManager<T extends StateManager>(
     LazyRecord<T> callback,
   ) =>
       _lazyProviders[T] = (service) => callback(service) as Object;
 
   @override
-  void addSingletonLazy<T>(T Function(ServiceCollection service) callback) {
+  void addSingleton<T>(T Function(ServiceCollection service) callback) {
     scaleDebugPrint('added service: $T');
     _lazySingletons[T] = (service) => callback(service) as Object;
   }
@@ -117,7 +113,7 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
   @override
   Binder<T> addBinder<T>() {
     var test = InternalBinder<T>(this);
-    addSingletonLazy<DataProducer<T>>((_) => test);
+    addSingleton<DataProducer<T>>((_) => test);
     return test;
   }
 
@@ -130,9 +126,9 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       composite.add(binder() as DataProducer<T1>);
       _resolvedServices[DataProducer<T1>] = composite;
     } else {
-      addSingletonLazy<DataProducer<T1>>((_) => binder());
+      addSingleton<DataProducer<T1>>((_) => binder());
     }
-    addSingletonLazy<DataConsumer<T2>>(
+    addSingleton<DataConsumer<T2>>(
       (service) {
         var producer = service.get<DataProducer<T1>>();
         if (producer is CompositeProducer<T1>) {
@@ -158,15 +154,15 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     List<String>? requires,
     LoaderOptions? options,
   }) {
-    addSingletonLazy<MapperOf<TDto>>((_) => mapper);
-    addSingletonLazy<LoaderModelsFactory<T, TDto>>((_) => factory);
+    addSingleton<MapperOf<TDto>>((_) => mapper);
+    addSingleton<LoaderModelsFactory<T, TDto>>((_) => factory);
 
     addHttpGetRequest<TDto>(
       uri: uri,
       requires: requires,
     );
 
-    addGlobalStateManagerLazy((service) {
+    addGlobalStateManager((service) {
       var loaderStateManager = LoaderStateManager<T, TDto>(
         service.get<HttpRequest<TDto>>(),
         service.get<LoaderModelsFactory<T, TDto>>(),
@@ -211,7 +207,7 @@ class InternalBinder<T> implements DataProducer<T>, Binder<T> {
   @override
   void addConsumer<T1>(T1 Function(T data) mapper) {
     var binder = GenericDataBinder<T, T1>(mapper);
-    registry.addSingletonLazy<DataConsumer<T1>>((_) => binder);
+    registry.addSingleton<DataConsumer<T1>>((_) => binder);
     producers.add(binder);
   }
 }

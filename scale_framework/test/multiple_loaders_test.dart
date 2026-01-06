@@ -123,7 +123,7 @@ class TestFeatureModule extends FeatureModule {
 
   @override
   void setup(PublicRegistry registry) {
-    registry.addSingletonLazy<http.Client>((service) => makeFakeHttpClient());
+    registry.addSingleton<http.Client>((service) => makeFakeHttpClient());
     registry.addLoader<BffData, BffDataDto>(
       mapper: MapperOfBffDataDto(),
       factory: BffDataModelsFactory(id: id),
