@@ -28,12 +28,18 @@ class HttpGetRequest<TResult> implements HttpRequest<TResult> {
 
     var response = await client.get(context.uri, headers: context.headers);
 
+    if (response.statusCode == 400) {
+      throw BadRequestException(400);
+    }
+
     if (response.statusCode == 404) {
       throw ResourceNotFoundException(404);
     }
-    if (response.statusCode == 500) {
-      throw ServerException(500);
+
+    if (response.statusCode >= 500) {
+      throw ServerException(response.statusCode);
     }
+
     return mapper.map(response.body);
   }
 

@@ -17,3 +17,7 @@ class ResourceNotFoundException extends HttpException {
 class ServerException extends HttpException {
   ServerException(super.statusCode);
 }
+
+class BadRequestException extends HttpException {
+  BadRequestException(super.statusCode);
+}

@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
-import 'package:scale_framework/internal/debug_mode.dart';
 import 'package:scale_framework/resources/http/http_module.dart';
 import 'package:scale_framework/scale_framework.dart';
 
@@ -36,7 +35,6 @@ class _ModuleSetupState extends State<ModuleSetup> {
         ...widget.featureModules ?? [],
       ],
     );
-    scaleDebugPrint('initializing global interception');
     widget.initialize?.call(registry.get<HttpGlobalInterception>());
     registry.initialize();
   }

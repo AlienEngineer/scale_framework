@@ -45,6 +45,7 @@ void main() {
 
       expect(result, 'some result');
     });
+
     test('when an interceptor fails it is ignored', () async {
       var iocContainer = IocContainer();
 
@@ -170,6 +171,16 @@ void main() {
       );
     });
 
+    test('throws exception when the resource was Bad Request (400)', () async {
+      var request = IocContainer().makeRequest('some_resource/400');
+
+      expect(
+        () async => await request.execute(),
+        throwsA(
+            predicate((e) => e is BadRequestException && e.statusCode == 400)),
+      );
+    });
+
     test('throws exception when the resource returns a server error (500)',
         () async {
       var request = IocContainer().makeRequest('some_resource/500');
@@ -177,6 +188,16 @@ void main() {
       expect(
         () async => await request.execute(),
         throwsA(predicate((e) => e is ServerException && e.statusCode == 500)),
+      );
+    });
+
+    test('throws exception when the resource returns a server error (501)',
+        () async {
+      var request = IocContainer().makeRequest('some_resource/501');
+
+      expect(
+        () async => await request.execute(),
+        throwsA(predicate((e) => e is ServerException && e.statusCode == 501)),
       );
     });
   });
@@ -215,8 +236,14 @@ MockClient makeFakeHttpClient() => MockClient((request) async {
       if (request.url.toString() == 'some_resource/2') {
         return http.Response("some result 2", 200);
       }
+      if (request.url.toString() == 'some_resource/400') {
+        return http.Response("Bad Request", 400);
+      }
       if (request.url.toString() == 'some_resource/500') {
         return http.Response("there was an error processing the request", 500);
+      }
+      if (request.url.toString() == 'some_resource/501') {
+        return http.Response("there was an error processing the request", 501);
       }
       return http.Response('Not Found', 404);
     });

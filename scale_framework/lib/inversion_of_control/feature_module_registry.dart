@@ -1,5 +1,4 @@
 import 'package:provider/single_child_widget.dart';
-import 'package:scale_framework/internal/debug_mode.dart';
 import 'package:scale_framework/scale_framework.dart';
 
 class FeatureModulesRegistry implements Registry, ModuleRegistry {
@@ -16,9 +15,6 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     this.featureModules,
     this.featureClusters,
   }) {
-    scaleDebugPrint('');
-    scaleDebugPrint('Feature Module Registry Started');
-    scaleDebugPrint('');
     _setupRegistry();
   }
 
@@ -51,10 +47,6 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       element();
     }
     _initialization.clear();
-
-    scaleDebugPrint('');
-    scaleDebugPrint('Feature Module Registry Initialized');
-    scaleDebugPrint('');
   }
 
   void _storeStateManager(Type type, dynamic obj) {
@@ -64,7 +56,6 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
       obj.internalInitialize(this);
       obj.initialize();
     });
-    scaleDebugPrint('added state manager: $type');
   }
 
   @override
@@ -94,7 +85,6 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
 
   @override
   void addSingleton<T>(T Function(ServiceCollection service) callback) {
-    scaleDebugPrint('added service: $T');
     _lazySingletons[T] = (service) => callback(service) as Object;
   }
 
@@ -102,7 +92,6 @@ class FeatureModulesRegistry implements Registry, ModuleRegistry {
     Type type,
     Object Function(ServiceCollection service) callback,
   ) {
-    scaleDebugPrint('added service: $type');
     _lazySingletons[type] = (service) => callback(service);
   }
 
@@ -266,9 +255,14 @@ class LoaderOptions<T> {
   final bool initializeOnAppStart;
   final DataProducerMapperOf<T> mapper;
 
+  final bool showLoadedOnFailure;
+  final bool showLoadedOnLoading;
+
   const LoaderOptions({
     this.initializeOnAppStart = true,
     this.mapper = const StubMapper(),
+    this.showLoadedOnFailure = false,
+    this.showLoadedOnLoading = false,
   });
 }
 

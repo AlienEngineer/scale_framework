@@ -48,9 +48,7 @@ class BrandStateManager extends StateManager<Brand> {
 class TestFeatureModule implements FeatureModule {
   @override
   void setup(PublicRegistry registry) {
-    registry
-        .addBinder<Vehicle>()
-        .addConsumer<Brand>((data) => Brand(data.brand));
+    registry.addBinder<Vehicle>().addConsumer((data) => Brand(data.brand));
 
     registry.addGlobalStateManager((_) => VehicleStateManager());
     registry.addGlobalStateManager((_) => BrandStateManager());

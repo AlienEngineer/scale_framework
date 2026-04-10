@@ -21,10 +21,7 @@ class HomeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BffDataTestWidget(
-        showLoadedOnFailure: showLoadedOnFailure,
-        showLoadedOnLoading: showLoadedOnLoading,
-      ),
+      body: BffDataTestWidget(),
       floatingActionButton: Column(
         children: [
           FloatingActionButton(

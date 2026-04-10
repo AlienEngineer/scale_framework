@@ -1,32 +1,72 @@
 import 'package:flutter/widgets.dart';
-import 'package:scale_framework/internal/debug_mode.dart';
 import 'package:scale_framework/scale_framework.dart';
 
 class LoaderData<T> {
-  final bool loading;
   final bool loaded;
   final T data;
-  final bool failed;
+
+  Widget Function(BuildContext context)? loadingFunction;
+
+  Widget Function(BuildContext context, T data)? loadedFunction;
+
+  Widget Function(BuildContext context, T data)? onErrorFunction;
+
+  Widget Function(BuildContext contect, T data, LoaderData<T> self)?
+      currentFunction;
 
   LoaderData({
-    this.loading = false,
     this.loaded = false,
-    this.failed = false,
     required this.data,
+    this.currentFunction,
+    this.loadingFunction,
+    this.loadedFunction,
+    this.onErrorFunction,
   });
 
-  LoaderData<T> copyWith({
-    bool? loaded,
-    T? data,
-    bool? failed,
-    bool? loading,
-  }) =>
-      LoaderData<T>(
-        loading: loading ?? this.loading,
-        loaded: loaded ?? this.loaded,
-        data: data ?? this.data,
-        failed: failed ?? this.failed,
+  LoaderData<T> setError(Object? error) => LoaderData<T>(
+        loaded: loaded,
+        data: data,
+        currentFunction: (context, data, self) {
+          return self.onErrorFunction!(context, data);
+        },
+        loadingFunction: loadingFunction,
+        loadedFunction: loadedFunction,
+        onErrorFunction: onErrorFunction,
       );
+
+  LoaderData<T> setLoading() => LoaderData<T>(
+        loaded: loaded,
+        data: data,
+        currentFunction: (context, data, self) {
+          return self.loadingFunction!(context);
+        },
+        loadingFunction: loadingFunction,
+        loadedFunction: loadedFunction,
+        onErrorFunction: onErrorFunction,
+      );
+
+  LoaderData<T> setLoaded(T data) => LoaderData<T>(
+        loaded: true,
+        data: data,
+        currentFunction: (context, data, self) {
+          return self.loadedFunction!(context, data);
+        },
+        loadingFunction: loadingFunction,
+        loadedFunction: loadedFunction,
+        onErrorFunction: onErrorFunction,
+      );
+
+  Widget build(BuildContext context) => currentFunction!(context, data, this);
+
+  void bind(
+    Widget Function(BuildContext context) loading,
+    Widget Function(BuildContext context, T data) loaded,
+    Widget Function(BuildContext context, T data) onError,
+  ) {
+    loadingFunction = loading;
+    loadedFunction = loaded;
+    onErrorFunction = onError;
+  }
 }
 
 abstract class LoaderModelsFactory<T, TDto> {
@@ -94,52 +134,54 @@ class LoaderStateManager<T, TDto> extends StateManager<LoaderData<T>>
     });
   }
 
-  void pushData(value) => pushNewState((oldState) => oldState.copyWith(
-        data: modelsFactory.map(value),
-        loaded: true,
-        failed: false,
-        loading: false,
-      ));
+  void pushData(value) =>
+      pushNewState((oldState) => oldState.setLoaded(modelsFactory.map(value)));
 
-  void pushError(Object? error) => pushNewState(
-      (oldState) => oldState.copyWith(failed: true, loading: false));
+  void pushError(Object? error) {
+    pushNewState((oldState) {
+      if (shouldDisplayError(oldState)) {
+        return oldState.setError(error);
+      }
+      return oldState.setLoaded(oldState.data);
+    });
+  }
 
-  void pushInitialState() =>
-      pushNewState((oldState) => oldState.copyWith(loading: true));
+  void pushInitialState() {
+    pushNewState((oldState) {
+      if (shouldDisplayLoading(oldState)) {
+        return oldState.setLoading();
+      }
+      return oldState.setLoaded(oldState.data);
+    });
+  }
+
+  bool shouldDisplayError(LoaderData<T> data) =>
+      !data.loaded || !options.showLoadedOnFailure;
+
+  bool shouldDisplayLoading(LoaderData<T> data) =>
+      !data.loaded || !options.showLoadedOnLoading;
 }
 
 abstract class LoaderWidget<T> extends StatelessWidget {
-  final bool showLoadedOnFailure;
-  final bool showLoadedOnLoading;
-  const LoaderWidget({
-    super.key,
-    this.showLoadedOnFailure = false,
-    this.showLoadedOnLoading = false,
-  });
+  const LoaderWidget({super.key});
 
   @override
   Widget build(BuildContext context) => StateBuilder<LoaderData<T>>(
         builder: (context, data) {
-          if (shouldDisplayLoading(data)) {
-            scaleDebugPrint('loading : $T');
-            return loading(context);
-          }
-          if (shouldDisplayError(data)) {
-            scaleDebugPrint('error : $T');
-            return onError(context, data.data);
-          }
-          scaleDebugPrint('loaded : $T');
-          return loaded(context, data.data);
+          // todo: find a way to restructure this. This way we bind every time the widget rebuilds. But these never change.
+          data.bind(
+            loading,
+            loaded,
+            onError,
+          );
+
+          return data.build(context);
         },
       );
 
-  bool shouldDisplayError(LoaderData<dynamic> data) =>
-      data.failed && (!data.loaded || !showLoadedOnFailure);
-
-  bool shouldDisplayLoading(LoaderData<dynamic> data) =>
-      data.loading && (!data.loaded || !showLoadedOnLoading);
-
   Widget loading(BuildContext context);
+
   Widget loaded(BuildContext context, T data);
+
   Widget onError(BuildContext context, T data);
 }

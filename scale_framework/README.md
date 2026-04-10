@@ -18,6 +18,13 @@ To initialize the framework:
   )
 ```
 
+### Debug Mode
+
+To show state changes in the console use:
+```dart
+ScaleFramework.EnableDebugMode();
+```
+
 ## Inversion Of Control
 
 Features must expose a `FeatureModule` or `FeatureCluster` to be used by the App. These are their IOC Containers:
@@ -52,13 +59,6 @@ class AppCluster implements FeatureCluster {
 ```
 
 ## State Management
-
-### Debug Mode
-
-To show state changes in the console use:
-```dart
-ScaleFramework.EnableDebugMode();
-```
 
 ### Loading Backend Data
 
@@ -162,20 +162,50 @@ To react as state changes:
 The framework includes a way to manipulate the http requests via `HttpRequestInterceptor` and in order to configure an interceptor one must:
 
 ```dart
-
 // access HttpConfiguration via registry
 var configuration = registry.get<HttpConfiguration>();
 
 configuration.addRequestInterceptors([
   /* MyCustomRequestInterceptor */
 ]);
-
 ```
 
+The global interceptor is available in the `ModuleSetup`.
+
+```dart
+ModuleSetup(
+  initialize: (global) {
+    global.set('device', 'Android');
+  },
+  //...
+)
+```
 
 ## Sharing data between features
 
-A feature that needs data is required to explicitly define that dependency. The feature module must receive a `DataConsumer<T>` that will need to be passed by the app. On the other hand, features that can provide data need to allow for a `DataProvider<T>` to be given. This means when a feature produce a value it has the opportunity to push that data via the `DataProvider<T>` and eventually be consumed by the app and pushed to data consumers.
+All state managers produce data whenever a `pushNewState` is called. This gives an opportunity to capture this data and transform it to push data into another state manager. 
+In order to do this, we only need to set it up like so:
+```dart
+registry
+    .addBinder<SomeTypeProduced>()
+    // data is an instance of SomeTypeProduced. 
+    // the next line maps that data into another data type.
+    .addConsumer((data) => SomeTypeConsumed());
+```
+
+An alternative way for more complex mappings would be to create a `DataBinder<T1, T2>` like so:
+
+```dart
+// register the data binder.
+registry.addDataBinder((_) => Type1ToType2Binder());
+
+// some implementation for that data binder.
+class Type1ToType2Binder extends DataBinder<Type1, Type2> {
+  Type2 map(Type1 data) => Type2();
+}
+```
+
+As long as there is a `StateManager<Type2>` it will receive data when a Type1 is pushed onto a `StateManager<Type1>`. 
 
 ## Framework Goals
 

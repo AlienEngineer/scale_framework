@@ -21,10 +21,7 @@ class HomeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BffDataTestWidget(
-        showLoadedOnFailure: showLoadedOnFailure,
-        showLoadedOnLoading: showLoadedOnLoading,
-      ),
+      body: BffDataTestWidget(),
       floatingActionButton: Column(
         children: [
           FloatingActionButton(
@@ -42,6 +39,7 @@ class HomeWidget extends StatelessWidget {
 }
 
 void main() {
+  ScaleFramework.enableDebugMode();
   group('first load', () {
     testWidgets('On render display loading', (WidgetTester tester) async {
       await pumpApp(tester);
@@ -200,10 +198,16 @@ Future<void> pumpApp(
   await tester.pumpWidget(MaterialApp(
     home: ModuleSetup(
       featureModules: [
-        TestFeatureModule(id, avoidFirstRequest),
+        TestFeatureModule(
+          id,
+          avoidFirstRequest,
+          showLoadedOnFailure: showLoadedOnFailure,
+          showLoadedOnLoading: showLoadedOnLoading,
+        ),
       ],
       child: HomeWidget(
         refreshId: refreshId,
+        // todo: remove these options from the widget..
         showLoadedOnFailure: showLoadedOnFailure,
         showLoadedOnLoading: showLoadedOnLoading,
       ),
@@ -216,11 +220,20 @@ class TestFeatureModule extends FeatureModule {
   final int id;
   final bool avoidFirstRequest;
 
-  TestFeatureModule(this.id, this.avoidFirstRequest);
+  bool showLoadedOnFailure;
+  bool showLoadedOnLoading;
+
+  TestFeatureModule(
+    this.id,
+    this.avoidFirstRequest, {
+    this.showLoadedOnFailure = false,
+    this.showLoadedOnLoading = false,
+  });
 
   @override
   void setup(PublicRegistry registry) {
     registry.addSingleton<http.Client>((service) => makeFakeHttpClient());
+
     registry.addLoader<BffData, BffDataDto>(
       mapper: MapperOfBffDataDto(),
       factory: BffDataModelsFactory(id: id),
@@ -228,6 +241,8 @@ class TestFeatureModule extends FeatureModule {
       options: LoaderOptions(
         initializeOnAppStart: !avoidFirstRequest,
         mapper: MapperToMyId(),
+        showLoadedOnFailure: showLoadedOnFailure,
+        showLoadedOnLoading: showLoadedOnLoading,
       ),
     );
   }

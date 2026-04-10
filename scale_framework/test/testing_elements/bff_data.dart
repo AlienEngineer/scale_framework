@@ -38,11 +38,7 @@ class BffDataModelsFactory implements LoaderModelsFactory<BffData, BffDataDto> {
 }
 
 class BffDataTestWidget extends LoaderWidget<BffData> {
-  const BffDataTestWidget({
-    super.showLoadedOnFailure,
-    super.showLoadedOnLoading,
-    super.key,
-  });
+  const BffDataTestWidget({super.key});
 
   @override
   Widget loaded(BuildContext context, BffData data) => LoadedWidget(data.data);
