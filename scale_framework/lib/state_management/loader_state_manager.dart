@@ -1,72 +1,55 @@
 import 'package:flutter/widgets.dart';
 import 'package:scale_framework/scale_framework.dart';
 
+class RenderContext<T> {
+  final BuildContext context;
+  final LoadingBuilderFunction loading;
+  final BuilderFunction<T> loaded;
+  final BuilderFunction<T> onError;
+
+  RenderContext(this.context, this.loading, this.loaded, this.onError);
+}
+
+typedef BuilderFunction<T> = Widget Function(BuildContext context, T data);
+typedef LoaderRenderFunction<T> = Widget Function(
+  RenderContext<T> renderContext,
+);
+typedef LoadingBuilderFunction = Widget Function(BuildContext context);
+
 class LoaderData<T> {
   final bool loaded;
   final T data;
-
-  Widget Function(BuildContext context)? loadingFunction;
-
-  Widget Function(BuildContext context, T data)? loadedFunction;
-
-  Widget Function(BuildContext context, T data)? onErrorFunction;
-
-  Widget Function(BuildContext contect, T data, LoaderData<T> self)?
-      currentFunction;
+  final LoaderRenderFunction<T> _renderFunction;
 
   LoaderData({
     this.loaded = false,
     required this.data,
-    this.currentFunction,
-    this.loadingFunction,
-    this.loadedFunction,
-    this.onErrorFunction,
-  });
+    LoaderRenderFunction<T>? renderFunction,
+  }) : _renderFunction =
+            renderFunction ?? ((context) => context.loading(context.context));
 
   LoaderData<T> setError(Object? error) => LoaderData<T>(
-        loaded: loaded,
-        data: data,
-        currentFunction: (context, data, self) {
-          return self.onErrorFunction!(context, data);
-        },
-        loadingFunction: loadingFunction,
-        loadedFunction: loadedFunction,
-        onErrorFunction: onErrorFunction,
-      );
+      loaded: loaded,
+      data: data,
+      renderFunction: (context) => context.onError(context.context, data));
 
   LoaderData<T> setLoading() => LoaderData<T>(
-        loaded: loaded,
-        data: data,
-        currentFunction: (context, data, self) {
-          return self.loadingFunction!(context);
-        },
-        loadingFunction: loadingFunction,
-        loadedFunction: loadedFunction,
-        onErrorFunction: onErrorFunction,
-      );
+      loaded: loaded,
+      data: data,
+      renderFunction: (context) => context.loading(context.context));
 
   LoaderData<T> setLoaded(T data) => LoaderData<T>(
-        loaded: true,
-        data: data,
-        currentFunction: (context, data, self) {
-          return self.loadedFunction!(context, data);
-        },
-        loadingFunction: loadingFunction,
-        loadedFunction: loadedFunction,
-        onErrorFunction: onErrorFunction,
-      );
+      loaded: true,
+      data: data,
+      renderFunction: (context) => context.loaded(context.context, data));
 
-  Widget build(BuildContext context) => currentFunction!(context, data, this);
-
-  void bind(
-    Widget Function(BuildContext context) loading,
-    Widget Function(BuildContext context, T data) loaded,
-    Widget Function(BuildContext context, T data) onError,
-  ) {
-    loadingFunction = loading;
-    loadedFunction = loaded;
-    onErrorFunction = onError;
-  }
+  Widget build(
+    BuildContext context,
+    LoadingBuilderFunction loading,
+    BuilderFunction<T> loaded,
+    BuilderFunction<T> onError,
+  ) =>
+      _renderFunction(RenderContext(context, loading, loaded, onError));
 }
 
 abstract class LoaderModelsFactory<T, TDto> {
@@ -166,18 +149,16 @@ abstract class LoaderWidget<T> extends StatelessWidget {
   const LoaderWidget({super.key});
 
   @override
-  Widget build(BuildContext context) => StateBuilder<LoaderData<T>>(
-        builder: (context, data) {
-          // todo: find a way to restructure this. This way we bind every time the widget rebuilds. But these never change.
-          data.bind(
-            loading,
-            loaded,
-            onError,
-          );
-
-          return data.build(context);
-        },
-      );
+  Widget build(BuildContext context) {
+    return StateBuilder<LoaderData<T>>(
+      builder: (context, data) => data.build(
+        context,
+        loading,
+        loaded,
+        onError,
+      ),
+    );
+  }
 
   Widget loading(BuildContext context);
 
