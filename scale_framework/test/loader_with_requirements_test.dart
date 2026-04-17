@@ -39,7 +39,7 @@ class HomeWidget extends StatelessWidget {
 }
 
 void main() {
-  ScaleFramework.enableDebugMode();
+  //ScaleFramework.enableDebugMode();
   group('first load', () {
     testWidgets('On render display loading', (WidgetTester tester) async {
       await pumpApp(tester);

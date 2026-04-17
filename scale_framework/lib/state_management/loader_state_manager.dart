@@ -28,17 +28,17 @@ class LoaderData<T> {
   }) : _renderFunction =
             renderFunction ?? ((context) => context.loading(context.context));
 
-  LoaderData<T> setError(Object? error) => LoaderData<T>(
+  LoaderData<T> _setError(Object? error) => LoaderData<T>(
       loaded: loaded,
       data: data,
       renderFunction: (context) => context.onError(context.context, data));
 
-  LoaderData<T> setLoading() => LoaderData<T>(
+  LoaderData<T> _setLoading() => LoaderData<T>(
       loaded: loaded,
       data: data,
       renderFunction: (context) => context.loading(context.context));
 
-  LoaderData<T> setLoaded(T data) => LoaderData<T>(
+  LoaderData<T> _setLoaded(T data) => LoaderData<T>(
       loaded: true,
       data: data,
       renderFunction: (context) => context.loaded(context.context, data));
@@ -118,23 +118,23 @@ class LoaderStateManager<T, TDto> extends StateManager<LoaderData<T>>
   }
 
   void pushData(value) =>
-      pushNewState((oldState) => oldState.setLoaded(modelsFactory.map(value)));
+      pushNewState((oldState) => oldState._setLoaded(modelsFactory.map(value)));
 
   void pushError(Object? error) {
     pushNewState((oldState) {
       if (shouldDisplayError(oldState)) {
-        return oldState.setError(error);
+        return oldState._setError(error);
       }
-      return oldState.setLoaded(oldState.data);
+      return oldState._setLoaded(oldState.data);
     });
   }
 
   void pushInitialState() {
     pushNewState((oldState) {
       if (shouldDisplayLoading(oldState)) {
-        return oldState.setLoading();
+        return oldState._setLoading();
       }
-      return oldState.setLoaded(oldState.data);
+      return oldState._setLoaded(oldState.data);
     });
   }
 

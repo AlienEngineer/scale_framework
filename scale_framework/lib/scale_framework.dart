@@ -25,13 +25,13 @@ class LogHttpInterceptor implements HttpRequestInterceptor {
 
   @override
   HttpRequestContext intercept(HttpRequestContext request) {
-    //scaleDebugPrint('running : ${interceptor.runtimeType}');
-    //scaleDebugPrint('before-> uri : ${request.uri}');
-    //scaleDebugPrint('before-> arguments : ${request.arguments}');
+    scaleDebugPrint('running : ${interceptor.runtimeType}');
+    scaleDebugPrint('before-> uri : ${request.uri}');
+    scaleDebugPrint('before-> arguments : ${request.arguments}');
     var context = interceptor.intercept(request);
 
-    //scaleDebugPrint('after-> uri : ${context.uri}');
-    //scaleDebugPrint('after-> arguments : ${context.arguments}');
+    scaleDebugPrint('after-> uri : ${context.uri}');
+    scaleDebugPrint('after-> arguments : ${context.arguments}');
     return context;
   }
 }

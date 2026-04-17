@@ -2,6 +2,14 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scale_framework/scale_framework.dart';
 
+class Timer {
+  static final stopwatch = Stopwatch();
+  static void start() => stopwatch.start();
+  static void stop() => stopwatch.stop();
+  static void reset() => stopwatch.reset();
+  static Duration get elapsed => stopwatch.elapsed;
+}
+
 abstract class StateManager<TState> {
   final _CubitWrapper<TState> _bloc;
   late DataConsumer<TState> _consumer;
@@ -10,14 +18,15 @@ abstract class StateManager<TState> {
   StateManager(TState initialState)
       : _bloc = _CubitWrapper<TState>(initialState);
 
-  void pushNewState(TState Function(TState oldState) getNewState) =>
-      _bloc.pushNewState(() {
-        var newState = getNewState(_currentState);
-        _producer.push(newState);
-        return newState;
-      });
+  void pushNewState(TState Function(TState oldState) getNewState) {
+    _bloc.pushNewState(() {
+      var newState = getNewState(currentState);
+      _producer.push(newState);
+      return newState;
+    });
+  }
 
-  TState get _currentState => _bloc.state;
+  TState get currentState => _bloc.state;
 
   BlocProvider getProvider() => BlocProvider<_CubitWrapper<TState>>(
       create: (BuildContext context) => _bloc);
