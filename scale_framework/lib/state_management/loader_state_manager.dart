@@ -145,19 +145,17 @@ class LoaderStateManager<T, TDto> extends StateManager<LoaderData<T>>
       !data.loaded || !options.showLoadedOnLoading;
 }
 
-abstract class LoaderWidget<T> extends StatelessWidget {
+abstract class LoaderWidget<T> extends UpdatableWidget<LoaderData<T>> {
   const LoaderWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return StateBuilder<LoaderData<T>>(
-      builder: (context, data) => data.build(
-        context,
-        loading,
-        loaded,
-        onError,
-      ),
-    );
+    return listen((ctx, data) => data.build(
+          ctx,
+          loading,
+          loaded,
+          onError,
+        ));
   }
 
   Widget loading(BuildContext context);

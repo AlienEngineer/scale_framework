@@ -1,6 +1,23 @@
 # Scale Framework
 
-### Examples:
+<!--toc:start-->
+- [Scale Framework](#scale-framework)
+  - [Examples:](#examples)
+  - [Debug Mode](#debug-mode)
+  - [Inversion Of Control](#inversion-of-control)
+    - [Feature Module](#feature-module)
+    - [Cluster Module](#cluster-module)
+  - [State Management](#state-management)
+    - [Loading Backend Data](#loading-backend-data)
+      - [On the FeatureModule](#on-the-featuremodule)
+    - [Notify Loader](#notify-loader)
+    - [Generic Use](#generic-use)
+  - [Http Configuration](#http-configuration)
+  - [Sharing data between features](#sharing-data-between-features)
+  - [Framework Goals](#framework-goals)
+<!--toc:end-->
+
+### Examples
 
 - [simple counter app](example/simple_counter_app.md)
 - [data_loader app](example/backend_data_loader_sample_app.md)
@@ -21,6 +38,7 @@ To initialize the framework:
 ### Debug Mode
 
 To show state changes in the console use:
+
 ```dart
 ScaleFramework.EnableDebugMode();
 ```
@@ -34,6 +52,7 @@ Features must expose a `FeatureModule` or `FeatureCluster` to be used by the App
 A feature module should contain all dependencies that our feature requires.
 
 Example code for `FeatureModule` from `feature_1`:
+
 ```dart
 class GarageModule implements FeatureModule {
   void setup(PublicRegistry registry) {
@@ -47,8 +66,8 @@ class GarageModule implements FeatureModule {
 
 A cluster module is a collection of feature modules.
 
-
 Example code for `ClusterModule` from `App`:
+
 ```dart
 class AppCluster implements FeatureCluster {
   @override
@@ -107,6 +126,7 @@ class MyWidget extends LoaderWidget<BackendData> {
 ```
 
 Whenever you want to refresh data from the backend just call:
+
 ```dart
 context.refresh<BackendData>(); // Replace BackendData with your type.
 
@@ -119,12 +139,12 @@ context.refresh<BackendData>({ 'field': 1 });
 ### Notify Loader
 
 Having defined a mapper for the notifier then one can do:
+
 ```dart
 context.push<MyModel>(); // Sends a notification to the loader that can handle MyModal.
 ```
 
-`MyModel` is going to be captured by the mapper defined in `LoaderOptions<T>` (T must be MyModel) during `addLoader`. 
-
+`MyModel` is going to be captured by the mapper defined in `LoaderOptions<T>` (T must be MyModel) during `addLoader`.
 
 For more generic usage there the example below.
 
@@ -183,8 +203,9 @@ ModuleSetup(
 
 ## Sharing data between features
 
-All state managers produce data whenever a `pushNewState` is called. This gives an opportunity to capture this data and transform it to push data into another state manager. 
+All state managers produce data whenever a `pushNewState` is called. This gives an opportunity to capture this data and transform it to push data into another state manager.
 In order to do this, we only need to set it up like so:
+
 ```dart
 registry
     .addBinder<SomeTypeProduced>()
@@ -205,7 +226,7 @@ class Type1ToType2Binder extends DataBinder<Type1, Type2> {
 }
 ```
 
-As long as there is a `StateManager<Type2>` it will receive data when a Type1 is pushed onto a `StateManager<Type1>`. 
+As long as there is a `StateManager<Type2>` it will receive data when a Type1 is pushed onto a `StateManager<Type1>`.
 
 ## Framework Goals
 

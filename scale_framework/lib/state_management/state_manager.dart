@@ -42,14 +42,20 @@ abstract class StateManager<TState> {
   }
 }
 
-class StateBuilder<S> extends StatelessWidget {
+class StateBuilder<S> extends UpdatableWidget<S> {
   final Widget Function(BuildContext context, S state) builder;
 
   const StateBuilder({super.key, required this.builder});
 
   @override
-  Widget build(BuildContext context) =>
-      BlocBuilder<_CubitWrapper<S>, S>(builder: builder);
+  Widget build(BuildContext context) => listen(builder);
+}
+
+abstract class UpdatableWidget<S> extends StatelessWidget {
+  const UpdatableWidget({super.key});
+
+  Widget listen(Widget Function(BuildContext ctx, S state) onChange) =>
+      BlocBuilder<_CubitWrapper<S>, S>(builder: onChange);
 }
 
 class _StubDataBinder<T> implements DataProducer<T>, DataConsumer<T> {
