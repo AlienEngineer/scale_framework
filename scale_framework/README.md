@@ -1,233 +1,147 @@
 # Scale Framework
 
-<!--toc:start-->
-- [Scale Framework](#scale-framework)
-  - [Examples:](#examples)
-  - [Debug Mode](#debug-mode)
-  - [Inversion Of Control](#inversion-of-control)
-    - [Feature Module](#feature-module)
-    - [Cluster Module](#cluster-module)
-  - [State Management](#state-management)
-    - [Loading Backend Data](#loading-backend-data)
-      - [On the FeatureModule](#on-the-featuremodule)
-    - [Notify Loader](#notify-loader)
-    - [Generic Use](#generic-use)
-  - [Http Configuration](#http-configuration)
-  - [Sharing data between features](#sharing-data-between-features)
-  - [Framework Goals](#framework-goals)
-<!--toc:end-->
+Scale Framework is a Flutter framework for feature-oriented state management, dependency registration, and backend data loading. It helps teams ship independent feature libraries, expose typed state to widgets, and model request-driven UI without rewriting the same wiring in every feature.
 
-### Examples
+## Why use it
 
-- [simple counter app](example/simple_counter_app.md)
-- [data_loader app](example/backend_data_loader_sample_app.md)
+- **Feature-first composition**: each feature exposes a `FeatureModule` or `FeatureCluster`, and the app chooses how to compose them.
+- **Typed state updates**: `StateManager<T>` owns state transitions and `StateBuilder<T>` rebuilds the UI when state changes.
+- **Built-in request lifecycle UI**: `LoaderStateManager<T, TDto>` and `LoaderWidget<T>` cover loading, loaded, and error rendering.
+- **Cross-feature communication without direct feature dependencies**: `DataBinder<T1, T2>` and `context.push(...)` let the app wire features together through framework contracts.
+- **Consistent HTTP setup**: request interceptors, required headers, and URI argument replacement are part of the framework surface.
 
-To initialize the framework:
+## When it fits best
 
-```dart
+Scale Framework is a good fit when you want to:
 
-  MaterialApp(
-    home: ModuleSetup(
-      featureClusters: [/* Feature Clusters go here */],
-      featureModules: [/* Feature Modules go here */],
-      child: /* home here */,
-    ),
-  )
-```
+- build features as independent libraries that depend only on `scale_framework`
+- keep app composition in one place instead of spreading setup across widgets
+- standardize state-driven and request-driven UI patterns across features
+- connect features through binders instead of direct package-to-package imports
 
-### Debug Mode
+## Core building blocks
 
-To show state changes in the console use:
+| Building block | Purpose |
+| --- | --- |
+| `ModuleSetup` | Bootstraps framework, registry, providers, and HTTP support |
+| `FeatureModule` | Registers dependencies for one feature |
+| `FeatureCluster` | Groups several feature modules behind one composition entry point |
+| `StateManager<T>` | Owns typed state and emits updates |
+| `StateBuilder<T>` | Rebuilds widgets from state changes |
+| `LoaderStateManager<T, TDto>` | Manages request lifecycle for one frontend model type |
+| `LoaderWidget<T>` | Renders loading, loaded, and error states through dynamic dispatch |
+| `DataBinder<T1, T2>` | Maps produced data from one type into another |
+| `HttpConfiguration` | Registers request interceptors |
+
+## Quick start
+
+Wrap your app with `ModuleSetup` and give it feature modules:
 
 ```dart
-ScaleFramework.EnableDebugMode();
-```
-
-## Inversion Of Control
-
-Features must expose a `FeatureModule` or `FeatureCluster` to be used by the App. These are their IOC Containers:
-
-### Feature Module
-
-A feature module should contain all dependencies that our feature requires.
-
-Example code for `FeatureModule` from `feature_1`:
-
-```dart
-class GarageModule implements FeatureModule {
-  void setup(PublicRegistry registry) {
-    registry.addGlobalStateManager((_) => GarageLoader());
-    registry.addGlobalStateManager((_) => VehicleSelectionStateManager());
-  }
-}
-```
-
-### Cluster Module
-
-A cluster module is a collection of feature modules.
-
-Example code for `ClusterModule` from `App`:
-
-```dart
-class AppCluster implements FeatureCluster {
-  @override
-  void setup(ModuleRegistry registry) {
-    registry.addModule((_) => GarageModule());
-  }
-}
-```
-
-## State Management
-
-### Loading Backend Data
-
-To ease the access to data without much duplication we need 3 parts, a Dto Mapper, a Business Model Factory and a URI:
-
-#### On the FeatureModule
-
-```dart
-registry.addLoader<T, TDto>(
-    mapper: MapperOfDto(),            // an implementation of MapperOf<TDto>
-    factory: ModelsFactory(),         // an implementation of LoaderModelsFactory<T, TDto> 
-    uri: 'some_url',                  // the target url, can include path parameters within {} 
-    client: httpClient,               // [Optional] Used for testing purposes for faking a backend.
-    requires: ['some field'],         // [Optional] Tells the framework that this loaders requires specific information to be provided.
-    options: LoaderOptions<MyModel>(  // [Optional] Defines options in behaviour for the loader
-        initializeOnAppStart: true,   // [Optional - Default: true] Defines if the loading should happen automatically on start.
-        mapper: MapperToMyId(),       // [Optional] Defines a mapper to be used for notifications. See "Notify Loader" below.
-    )
+MaterialApp(
+  home: ModuleSetup(
+    featureModules: [CounterFeatureModule()],
+    child: const CountWidget(),
+  ),
 );
 ```
 
-After this is done, we can go ahead and implement our Widget that will define what happens when a response comes in from the backend.
-In the example, `BackendData` holds the mapped data from the implementation in `LoaderModelsFactory<T, TDto>`.
+Create a state manager for your feature:
 
 ```dart
-class MyWidget extends LoaderWidget<BackendData> {
-  const MyWidget({super.key}): super(
-    // Keeps displaying the loaded state when refresh fails.
-    showLoadedOnFailure: false, // Optional, false by default
-    // Keeps displaying the loaded state while refreshing.
-    showLoadedOnLoading: false, // Optional, false by default
-  );
+class CounterStateManager extends StateManager<int> {
+  CounterStateManager() : super(0);
 
-  @override
-  Widget loaded(BuildContext context, BackendData data) =>
-      LoadedWidget();
-
-  @override
-  Widget loading(BuildContext context) =>
-      LoadingWidget();
-
-  @override
-  Widget onError(BuildContext context, BackendData data) =>
-      FailureWidget();
-}
-```
-
-Whenever you want to refresh data from the backend just call:
-
-```dart
-context.refresh<BackendData>(); // Replace BackendData with your type.
-
-// Provide data to be replaced in the path of the http request
-// in this example a path with {field} is going to be replaced by 1
-// e.g. 'mypath/{field}' would be converted into 'mypath/1'
-context.refresh<BackendData>({ 'field': 1 });
-```
-
-### Notify Loader
-
-Having defined a mapper for the notifier then one can do:
-
-```dart
-context.push<MyModel>(); // Sends a notification to the loader that can handle MyModal.
-```
-
-`MyModel` is going to be captured by the mapper defined in `LoaderOptions<T>` (T must be MyModel) during `addLoader`.
-
-For more generic usage there the example below.
-
-### Generic Use
-
-To manage state you'll need a `StateManager<T>`:
-
-```dart
-class TestStateManager extends StateManager<int> {
-  TestStateManager() : super(0 /* Initial state */);
-
-  // Push New State based on the previous state.
   void increment() => pushNewState((oldState) => oldState + 1);
 }
 ```
 
-To react as state changes:
+Register it in a feature module:
 
 ```dart
-  Scaffold(
-    // React to state change of a given type
-    body: StateBuilder<int>(
-      builder: (context, count) => Center(child: Text('$count')),
-    ),
-    floatingActionButton: FloatingActionButton(
-      onPressed: () =>
-        context.getStateManager<TestStateManager>().increment(), // force a state change.
-      child: const Icon(Icons.add),
-    ),
-  );
-```
-
-## Http Configuration
-
-The framework includes a way to manipulate the http requests via `HttpRequestInterceptor` and in order to configure an interceptor one must:
-
-```dart
-// access HttpConfiguration via registry
-var configuration = registry.get<HttpConfiguration>();
-
-configuration.addRequestInterceptors([
-  /* MyCustomRequestInterceptor */
-]);
-```
-
-The global interceptor is available in the `ModuleSetup`.
-
-```dart
-ModuleSetup(
-  initialize: (global) {
-    global.set('device', 'Android');
-  },
-  //...
-)
-```
-
-## Sharing data between features
-
-All state managers produce data whenever a `pushNewState` is called. This gives an opportunity to capture this data and transform it to push data into another state manager.
-In order to do this, we only need to set it up like so:
-
-```dart
-registry
-    .addBinder<SomeTypeProduced>()
-    // data is an instance of SomeTypeProduced. 
-    // the next line maps that data into another data type.
-    .addConsumer((data) => SomeTypeConsumed());
-```
-
-An alternative way for more complex mappings would be to create a `DataBinder<T1, T2>` like so:
-
-```dart
-// register the data binder.
-registry.addDataBinder((_) => Type1ToType2Binder());
-
-// some implementation for that data binder.
-class Type1ToType2Binder extends DataBinder<Type1, Type2> {
-  Type2 map(Type1 data) => Type2();
+class CounterFeatureModule implements FeatureModule {
+  @override
+  void setup(PublicRegistry registry) {
+    registry.addGlobalStateManager((_) => CounterStateManager());
+  }
 }
 ```
 
-As long as there is a `StateManager<Type2>` it will receive data when a Type1 is pushed onto a `StateManager<Type1>`.
+Render it with `StateBuilder<T>`:
 
-## Framework Goals
+```dart
+class CountWidget extends StatelessWidget {
+  const CountWidget({super.key});
 
-This library must always be adapting to provide what features need. This includes solutions for common problems e.g. loading data from the backend with different UI responses. Request -> Load -> Processed/Error. Having solutions for common problems, makes teams move faster because they don't have to make things work again and again. Less duplication, less code, more production, more features.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: StateBuilder<int>(
+        builder: (context, count) => Center(child: Text('$count')),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () =>
+            context.getStateManager<CounterStateManager>().increment(),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+```
+
+That gives you:
+
+1. feature registration at app composition time
+2. typed state owned by a framework-managed manager
+3. UI updates driven by state instead of manual widget plumbing
+
+## Documentation map
+
+### Tutorials
+
+- [Build your first feature](docs/tutorials/build-your-first-feature.md)
+- [Load data with `LoaderWidget`](docs/tutorials/load-data-with-loader-widget.md)
+- [Walk through the example apps](docs/tutorials/walk-through-example-apps.md)
+
+### How-to guides
+
+- [Register feature modules and clusters](docs/how-to/register-feature-modules-and-clusters.md)
+- [Create and update state with `StateManager`](docs/how-to/create-and-update-state-with-state-manager.md)
+- [Configure loaders and initial requests](docs/how-to/configure-loaders-and-initial-requests.md)
+- [Refresh loaders with arguments or notifications](docs/how-to/refresh-loaders-with-arguments-or-notifications.md)
+- [Share data between features with binders](docs/how-to/share-data-between-features-with-binders.md)
+- [Add HTTP interceptors and required headers](docs/how-to/add-http-interceptors-and-required-headers.md)
+- [Test features, loaders, and binders](docs/how-to/test-features-loaders-and-binders.md)
+- [Debug and troubleshoot common problems](docs/how-to/debug-and-troubleshoot-common-problems.md)
+
+### Reference
+
+- [Module setup and registry](docs/reference/module-setup-and-registry.md)
+- [State management](docs/reference/state-management.md)
+- [Loaders](docs/reference/loaders.md)
+- [Data binding](docs/reference/data-binding.md)
+- [HTTP](docs/reference/http.md)
+- [Errors and debug mode](docs/reference/errors-and-debug-mode.md)
+
+### Explanation
+
+- [How Scale Framework is structured](docs/explanation/how-scale-framework-is-structured.md)
+- [Why dynamic dispatch keeps build methods clean](docs/explanation/why-dynamic-dispatch-keeps-build-methods-clean.md)
+- [Why feature libraries stay isolated](docs/explanation/why-feature-libraries-stay-isolated.md)
+- [How state, loaders, and binders work together](docs/explanation/how-state-loaders-and-binders-work-together.md)
+
+## Two design rules to keep in mind
+
+### Prefer dynamic dispatch in UI rendering
+
+`LoaderWidget<T>` is designed so each UI state chooses its own render path through `loading`, `loaded`, and `onError`, instead of one large build method full of branching. `StateBuilder<T>` pushes you toward the same style: render from current state instead of passing control through a large conditional tree.
+
+### Keep feature libraries isolated
+
+Feature libraries should depend on `scale_framework`, not on each other. The app layer composes features, registers binders, and decides how information flows between independently built packages.
+
+## Visual examples
+
+- [Counter example walkthrough](docs/tutorials/walk-through-example-apps.md#counter-example)
+- [Loader example walkthrough](docs/tutorials/walk-through-example-apps.md#loader-example)
+- [Deferred loader walkthrough](docs/tutorials/walk-through-example-apps.md#deferred-loader-example)

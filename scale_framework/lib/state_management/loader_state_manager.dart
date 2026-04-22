@@ -55,7 +55,6 @@ class LoaderData<T> {
 abstract class LoaderModelsFactory<T, TDto> {
   T makeInitialState();
   Map<String, Object>? getInitialArguments();
-  TDto makeOnErrorDto(Object? error);
   T map(TDto dto);
 }
 

@@ -21,9 +21,6 @@ class BffDataModelsFactory implements LoaderModelsFactory<BffData, BffDataDto> {
   Map<String, Object>? getInitialArguments() => {'id': id};
 
   @override
-  BffDataDto makeOnErrorDto(Object? error) => BffDataDto();
-
-  @override
   BffData map(BffDataDto dto) => BffData(data: dto.someField);
 
   @override
