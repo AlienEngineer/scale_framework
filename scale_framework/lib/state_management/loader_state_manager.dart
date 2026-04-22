@@ -149,14 +149,12 @@ abstract class LoaderWidget<T> extends UpdatableWidget<LoaderData<T>> {
   const LoaderWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return listen((ctx, data) => data.build(
-          ctx,
-          loading,
-          loaded,
-          onError,
-        ));
-  }
+  Widget onChange(BuildContext ctx, LoaderData<T> state) => state.build(
+        ctx,
+        loading,
+        loaded,
+        onError,
+      );
 
   Widget loading(BuildContext context);
 

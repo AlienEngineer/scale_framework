@@ -8,7 +8,7 @@ class BffData {
 }
 
 class BffDataTestWidget extends LoaderWidget<BffData> {
-  const BffDataTestWidget({super.key}) : super(showLoadedOnLoading: true);
+  const BffDataTestWidget({super.key}) : super();
 
   @override
   Widget loaded(BuildContext context, BffData data) =>

@@ -2,14 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scale_framework/scale_framework.dart';
 
-class Timer {
-  static final stopwatch = Stopwatch();
-  static void start() => stopwatch.start();
-  static void stop() => stopwatch.stop();
-  static void reset() => stopwatch.reset();
-  static Duration get elapsed => stopwatch.elapsed;
-}
-
 abstract class StateManager<TState> {
   final _CubitWrapper<TState> _bloc;
   late DataConsumer<TState> _consumer;
@@ -48,14 +40,23 @@ class StateBuilder<S> extends UpdatableWidget<S> {
   const StateBuilder({super.key, required this.builder});
 
   @override
-  Widget build(BuildContext context) => listen(builder);
+  Widget onChange(BuildContext ctx, S state) => builder(ctx, state);
 }
+
+Widget onChange<TState>(Widget Function(TState state) builder) =>
+    BlocBuilder<_CubitWrapper<TState>, TState>(
+        builder: (_, state) => builder(state));
 
 abstract class UpdatableWidget<S> extends StatelessWidget {
   const UpdatableWidget({super.key});
 
   Widget listen(Widget Function(BuildContext ctx, S state) onChange) =>
       BlocBuilder<_CubitWrapper<S>, S>(builder: onChange);
+
+  @override
+  Widget build(BuildContext context) => listen(onChange);
+
+  Widget onChange(BuildContext ctx, S state);
 }
 
 class _StubDataBinder<T> implements DataProducer<T>, DataConsumer<T> {

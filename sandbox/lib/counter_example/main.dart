@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
       home: ModuleSetup(
         featureModules: [CounterFeatureModule()],
-        child: CountWidget(),
+        child: CounterWidget(),
       ),
     );
   }
